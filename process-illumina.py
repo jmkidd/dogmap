@@ -82,7 +82,7 @@ def check_prog_paths(myData):
     
     myData['logFile'].write('\nChecking for required programs...\n')
     
-    for p in ['bwa-mem2','gatk','samtools']:
+    for p in ['bwa-mem2','gatk','samtools','parallel']:
         if shutil.which(p) is None:
             s = p + ' not found in path! please fix (module load?)'
             print(s, flush=True)
@@ -155,6 +155,7 @@ def run_bwa_mem2(myData,run=True):
     s = 'Starting bwa mem'
     print(s,flush=True)
     myData['logFile'].write('\n' + s + '\n')
+    myData['logFile'].flush()              
     
     myData['workingBaseDir'] = myData['tmpDir'] + myData['sampleName']
     if os.path.isdir(myData['workingBaseDir']) is True:
@@ -186,6 +187,262 @@ def run_bwa_mem2(myData,run=True):
         
     myData['logFile'].flush()              
 ############################################################################# 
+def run_mdspark(myData,run=True):
+    s = 'Starting run_mdspark'
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+    myData['logFile'].flush()              
+    
+    myData['MDbam'] = myData['workingBaseDir'] + myData['sampleName'] + '.sort.md.bam'
+    myData['dupMetsFile'] = myData['finalDir'] + myData['sampleName'] + '.sort.md.metricts.txt'
+    
+    
+    cmd = 'gatk MarkDuplicatesSpark -I %s -O %s -M %s ' % (myData['bwaMEMBam'],myData['MDbam'],myData['dupMetsFile'])
+    cmd += ' --tmp-dir %s ' % myData['tmpDir']
+    cmd += ' --conf ''spark.executor.cores=%i'' ' % myData['threads']
+    cmd += ' --conf ''spark.local.dir=%s'' ' % myData['tmpDir']
+
+    if run is True:    
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')
+        myData['logFile'].flush()        
+        runCMD(cmd)        
+    else:
+        s = 'skipping run_bwa_mem2'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')    
+        
+    myData['logFile'].flush()              
+############################################################################# 
+def run_bqsr(myData,run=True):
+    #setup, run, and apply BQSR
+    s = 'starting run_bqsr'
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+    myData['logFile'].flush()              
+   
+
+
+    # first, need to make list of intervals to procsess!
+    setup_intervals(myData)
+    
+    # now, can write out cmd for each intervals
+    
+    # make intervals files
+    myData['bqsrDataDir'] = myData['workingBaseDir'] + 'bqsr-recal'
+    
+    if os.path.isdir(myData['bqsrDataDir']) is True:
+        s = '%s exists!' % (myData['bqsrDataDir'])
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+    else:
+       cmd = 'mkdir %s' % myData['bqsrDataDir']
+       myData['logFile'].write(cmd + '\n')
+       runCMD(cmd)    
+    myData['bqsrDataDir'] += '/'
+    
+    myData['bqsrJobsFileName'] = myData['workingBaseDir'] + 'baserecal.jobs.txt'
+    outFile = open(myData['bqsrJobsFileName'],'w')
+    
+    listOfBQSRRecalFiles = []
+    
+    for intervalFileName in myData['bqsrIntervalsFiles']:
+        cName = intervalFileName.split('/')[-1].split('.')[0]
+        outDataName = myData['bqsrDataDir'] + cName + '.recal_data.table'
+        
+        cmd = 'gatk --java-options "-Xmx4G" BaseRecalibrator '
+        cmd += ' --tmp-dir %s ' % myData['tmpDir']
+        cmd += ' -I %s ' % myData['MDbam']
+        cmd += ' -R %s' % myData['ref']
+        cmd += ' --intervals %s ' % intervalFileName
+        cmd += ' --known-sites %s ' % myData['knownSitesVCF']
+        cmd += ' -O %s ' % outDataName        
+        cmd += '\n'
+        outFile.write(cmd)
+        
+        listOfBQSRRecalFiles.append(outDataName)
+        
+    outFile.close()
+    
+    s = 'list of BaseRecalibrator written to %s' % myData['bqsrJobsFileName']
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+    myData['logFile'].flush()
+    
+    
+    cmd = 'parallel --jobs %i  < %s' % (myData['threads'],myData['bqsrJobsFileName'])              
+
+    if run is True:    
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')        
+        runCMD(cmd)        
+        myData['logFile'].flush()
+    else:
+        s = 'skipping parallel BaseRecalibrator'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')    
+        myData['logFile'].flush()
+
+    
+    # next, need to gather up the BaseRecalibrator reports
+    myData['bqsrReportsFileList'] = myData['bqsrJobsFileName'] + '.reports.list'
+    myData['bqsrReportsGatheredFile'] = myData['workingBaseDir']  + 'bqsrgathered.reports.list'
+    outFile = open( myData['bqsrReportsFileList'],'w')
+    for f in listOfBQSRRecalFiles:
+        outFile.write('%s\n' % f)    
+    outFile.close()
+    
+    cmd = 'gatk --java-options "-Xmx6G" GatherBQSRReports '
+    cmd += ' --input %s ' % myData['bqsrReportsFileList']
+    cmd += ' --output %s ' % myData['bqsrReportsGatheredFile']
+    
+    if run is True:    
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')        
+        runCMD(cmd)        
+        myData['logFile'].flush()
+    else:
+        s = 'skipping GatherBQSRReports'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')    
+        myData['logFile'].flush()
+    
+    # now, apply BQSR by chromosome again...
+    myData['ApplyBQSRJobsFileName'] = myData['workingBaseDir'] + 'applyBQSR.jobs.txt'
+    outFile = open(myData['ApplyBQSRJobsFileName'],'w')
+    
+    for intervalFileName in myData['bqsrIntervalsFiles']:
+        cName = intervalFileName.split('/')[-1].split('.')[0]
+        outBAMName = myData['bqsrDataDir'] + cName + '.bqsr.cram'        
+        cmd = 'gatk --java-options "-Xmx4G" ApplyBQSR '
+        cmd += ' --tmp-dir %s ' % myData['tmpDir']
+        cmd += ' -I %s ' % myData['MDbam']
+        cmd += ' -R %s' % myData['ref']
+        cmd += ' -O %s ' % outBAMName        
+        cmd += ' --intervals %s ' % intervalFileName
+        cmd += ' --bqsr-recal-file %s ' % myData['bqsrReportsGatheredFile']
+        cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30  '
+        
+        cmd += '\n'
+        outFile.write(cmd)
+    
+    # do unmapped
+    outBAMName = myData['bqsrDataDir'] + 'unmapped' + '.bqsr.cram'        
+    cmd = 'gatk --java-options "-Xmx4G" ApplyBQSR '
+    cmd += ' --tmp-dir %s ' % myData['tmpDir']
+    cmd += ' -I %s ' % myData['MDbam']
+    cmd += ' -R %s' % myData['ref']
+    cmd += ' -O %s ' % outBAMName        
+    cmd += ' --intervals %s ' % 'unmapped'
+    cmd += ' --bqsr-recal-file %s ' % myData['bqsrReportsGatheredFile']
+    cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30  '
+
+    cmd += '\n'
+    outFile.write(cmd)
+    
+    
+    outFile.close()
+    
+    s = 'list of ApplyBQSRJobs written to %s' % myData['ApplyBQSRJobsFileName']
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+    myData['logFile'].flush()
+    
+    cmd = 'parallel --jobs %i  < %s' % (myData['threads'],myData['ApplyBQSRJobsFileName'])              
+
+    if True is True:    
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')        
+        runCMD(cmd)        
+        myData['logFile'].flush()
+    else:
+        s = 'skipping parallel ApplyBQSRJobsFileName'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')    
+        myData['logFile'].flush()
+     
+    # next, need to merge together CRAM files
+
+    # GatherBamFiles, need them in order to be used
+    
+    
+    
+    
+    
+    
+############################################################################# 
+############################################################################# 
+def setup_intervals(myData):
+    # read in contig names
+    contigNames = []
+    inFile = open(myData['ref'] + '.fai')
+    for line in inFile:
+        line = line.rstrip()
+        line = line.split()
+        c = line[0]
+        contigNames.append(c)
+    inFile.close()
+    s = 'read in %i chrom names, working on assiging to intervals' % len(contigNames)
+    print(s,flush=True)
+    myData['logFile'].write(s + '\n')  
+    
+    # chrom to do separate
+    #int names
+    chromNames = []
+    chromNames.append('chrX')  # put X first, so start with X, chr1 -- longest chroms start first
+
+    for i in range(1,39):
+        c = 'chr' + str(i)
+        chromNames.append(c)
+    
+    s = 'have %i chroms to do individually' % len(chromNames)
+    print(s,flush=True)
+    myData['logFile'].write(s + '\n')  
+    
+    toDoTogether = []
+    for c in contigNames:
+        if c not in chromNames:
+            toDoTogether.append(c)
+    
+    s = 'have %i chroms to do together' % len(toDoTogether)
+    print(s,flush=True)
+    myData['logFile'].write(s + '\n')  
+    
+    # make intervals files
+    myData['bqsrIntervalsDir'] = myData['workingBaseDir'] + 'bqsr-intervals'
+    
+    if os.path.isdir(myData['bqsrIntervalsDir']) is True:
+        s = '%s exists!' % (myData['bqsrIntervalsDir'])
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+    else:
+       cmd = 'mkdir %s' % myData['bqsrIntervalsDir']
+       myData['logFile'].write(cmd + '\n')
+       runCMD(cmd)    
+    myData['bqsrIntervalsDir'] += '/'
+           
+    myData['bqsrIntervalsFiles'] = []    
+    for c in chromNames:
+        fn = myData['bqsrIntervalsDir'] + c + '.list'
+        outFile = open(fn,'w')
+        outFile.write('%s\n' % c)
+        outFile.close()
+        myData['bqsrIntervalsFiles'].append(fn)
+        
+    # then add the rest
+    fn = myData['bqsrIntervalsDir'] + 'other' + '.list'
+    outFile = open(fn,'w')
+    for c in toDoTogether:
+        outFile.write('%s\n' % c)
+    outFile.close()
+        
+    myData['bqsrIntervalsFiles'].insert(0,fn) # so that starts with the other, this is large want more run time
+        
+    s = 'have setup %i bqsrIntervalsFiles files' % len(myData['bqsrIntervalsFiles'])    
+    print(s,flush=True)
+    myData['logFile'].write(s + '\n')  
+    myData['logFile'].flush()  
+############################################################################# 
 
 # SETUP
 
@@ -205,6 +462,8 @@ parser.add_argument('-t', type=int,help='number of threads to use',required=True
 parser.add_argument('--tmpdir', type=str,help='tmp dir for running',required=True)
 parser.add_argument('--finaldir', type=str,help='final dir for output',required=True)
 
+parser.add_argument('--knownsites', type=str,help='vcf of known sites for BQSR',required=True)
+
 
 args = parser.parse_args()
 
@@ -220,6 +479,7 @@ myData['finalDir'] = args.finaldir
 myData['ref'] = args.ref
 myData['refBWA'] = args.refBWA
 myData['threads'] = args.t
+myData['knownSitesVCF'] = args.knownsites
 
 
 
@@ -249,9 +509,9 @@ init_log(myData)
 check_prog_paths(myData)
 check_dir_space(myData)
 run_bwa_mem2(myData,False)
+run_mdspark(myData,False)
 
-
-
+run_bqsr(myData,False)
 
 
 
