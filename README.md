@@ -40,5 +40,45 @@ at the known variant positions are ignored when building the quality recalibrati
 the variant file of 91 million SNV and small indels derived from 772 canines reported in [Plassais et al.](https://www.nature.com/articles/s41467-019-09373-w).
 
 The variant file was converted to UU_Cfam_GSD_1.0 coordinates using the LiftoverVcf from Picard/GATK, resulting in
-a total of 71,541,892 SNVs and 16,939,218 indels [SRZ189891_722g.simp.GSD1.0.vcf.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/SRZ189891_722g.simp.GSD1.0.vcf.gz).
+a total of 71,541,892 SNVs and 16,939,218 indels found in [SRZ189891_722g.simp.GSD1.0.vcf.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/SRZ189891_722g.simp.GSD1.0.vcf.gz).
 
+## Software versions
+
+The following software and versions are used
+```
+bwa-mem2 version 2.1
+gatk version 4.2.0.0
+GNU parallel
+samtools version >= 1.9
+```
+
+## Conceptual overview of pipeline
+
+Pipeline steps are implemented in (process-illumina.py).  This script is designed to run on our
+[cluster environment](https://arc-ts.umich.edu/greatlakes/configuration/) which features compute cores with local solid state drives.
+
+All paths are given as examples, and should be modified for your own use.
+
+### Step 1: read alignment using bwa-mem2
+
+```
+bwa-mem2 mem -K 100000000  -t NUM_THREADS -Y \
+-R READGROUPINFO \
+PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa_with_index \
+fq1.gz fq2.gz | samtools view -bS - >  /tmp/SAMPLE.bam 
+```
+
+This command is inspired by [Reiger et al. Functional equivalence of genome sequencing analysis](https://www.nature.com/articles/s41467-018-06159-4) and by 
+discussions with colleagues. The -K option removes non-determinism in framgent length distributions identified using different numbers of threads. -Y uses
+soft clipping for supplementary alignments, which may aid down stream structural variation analyses. 
+
+### Step 2: marking duplicates and sorting.
+
+Duplicate marking and sorting is performed in one step using MarkDuplicatesSpark.
+
+```
+gatk MarkDuplicatesSpark -I /tmp/SAMPLE.bam  -O /tmp/SAMPLE.sort.md.bam -M /final/SAMPLE.sort.md.metricts.txt \
+--tmp-dir /tmp \
+--conf 'spark.executor.cores=NUM_THREADS
+--conf ''spark.local.dir=/tmp
+```
