@@ -20,7 +20,6 @@ total 1.7G
 750M Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.fa.gz
 ```
 
-
 The genome reference is based on the German Shepherd assembly from [Wang et. al.](https://www.nature.com/articles/s42003-021-01698-x)
 supplemented with Y chromosome sequence from a Labrador retriever [GCF_014441545.1](https://www.ncbi.nlm.nih.gov/assembly/GCF_014441545.1)
 
@@ -37,7 +36,8 @@ Chromosome order is as indicated in the genome [.fai file](https://kiddlabshare.
 
 A set of known variants is required for Base Quality Score Recalibration (BQSR). Mismatches
 at the known variant positions are ignored when building the recalibration model. We utilized
-the variant file of 91 million SNV and small indels derived from 772 canines reported in [Plassais et al.](https://www.nature.com/articles/s41467-019-09373-w) The variant file was converted to UU_Cfam_GSD_1.0 coordinates using the LiftoverVcf from Picard/GATK, resulting in
+the variant file of 91 million SNV and small indels derived from 772 canines reported in [Plassais et al.](https://www.nature.com/articles/s41467-019-09373-w) The 
+variant file was converted to UU_Cfam_GSD_1.0 coordinates using the LiftoverVcf tool from Picard/GATK, resulting in
 a total of 71,541,892 SNVs and 16,939,218 indels found in [SRZ189891_722g.simp.GSD1.0.vcf.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/SRZ189891_722g.simp.GSD1.0.vcf.gz).
 
 ## Software versions
@@ -52,10 +52,10 @@ samtools version >= 1.9
 
 ## Conceptual overview of pipeline
 
-Pipeline steps are implemented in (process-illumina.py).  This script is designed to run on our
+Pipeline steps are implemented in process-illumina.py.  This script is designed to run on our
 [cluster environment](https://arc-ts.umich.edu/greatlakes/configuration/) which features compute cores with local solid state drives.
 
-All paths are given as examples, and should be modified for your own use.
+All paths are given as examples and should be modified for your own use.
 
 ### Step 1: read alignment using bwa-mem2
 
@@ -75,7 +75,9 @@ soft clipping for supplementary alignments, which may aid down stream structural
 Duplicate marking and sorting is performed in one step using MarkDuplicatesSpark.
 
 ```
-gatk MarkDuplicatesSpark -I /tmp/SAMPLE.bam  -O /tmp/SAMPLE.sort.md.bam -M /final/SAMPLE.sort.md.metricts.txt \
+gatk MarkDuplicatesSpark -I /tmp/SAMPLE.bam  \
+-O /tmp/SAMPLE.sort.md.bam \
+-M /final/SAMPLE.sort.md.metricts.txt \
 --tmp-dir /tmp \
 --conf 'spark.executor.cores=NUM_THREADS
 --conf ''spark.local.dir=/tmp
@@ -96,7 +98,7 @@ gatk --java-options "-Xmx4G" BaseRecalibrator \
 --known-sites PATH_TO_SRZ189891_722g.simp.GSD1.0.vcf.gz \
 -O /tmp/bqsr/INTERVAL.recal_data.table
 ```
-Then when completed, the recalibration data is combined
+Then when completed the recalibration data is combined
 
 ```
 gatk --java-options "-Xmx6G" GatherBQSRReports \
@@ -181,8 +183,8 @@ gatk --java-options "-Xmx6G" PrintReads \
 
 ## Use of pipeline script
 
-On our cluster, this can be ran automatically as a job with multiple available processing 
-cores on a single computer node. Local fast storage on the node is utilized.
+On our cluster this can be executed automatically as a job that uses multiple processing 
+cores on a single compute node. Local fast storage on the node is utilized as tmp space.
 
 Sample cmd:
 ```
@@ -202,17 +204,7 @@ python dogmap/process-illumina.py \
 ## Known issues and next steps
 
 * Automate QC stats on final cram
-* Calculate read depth at known variant sites and estimate X vs autosomes coverage
-* Calculate IBS metric from collection of known samples, estimate sample sample identity
-* Define known sites for use in sample variant calling (VQSR)
-* Define known copy-number 2 regions for normalization in QuicK-mer2 and fastCN depth-of-coverage based pipeline
-
-
-
-
-
-
-
-
-
-
+* Calculate read depth at known variant sites and estimate X vs autosome coverage
+* Calculate IBS metric from collection of known samples, estimate sample sample identity/breed assignment
+* Define known sites for use in variant calling (VQSR)
+* Define known copy-number 2 regions for normalization in QuicK-mer2 and fastCN depth-of-coverage based pipelines
