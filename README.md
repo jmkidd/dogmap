@@ -79,8 +79,8 @@ gatk MarkDuplicatesSpark -I /tmp/SAMPLE.bam  \
 -O /tmp/SAMPLE.sort.md.bam \
 -M /final/SAMPLE.sort.md.metricts.txt \
 --tmp-dir /tmp \
---conf 'spark.executor.cores=NUM_THREADS
---conf ''spark.local.dir=/tmp
+--conf 'spark.executor.cores=NUM_THREADS' \
+--conf 'spark.local.dir=/tmp'
 ```
 
 ### Step 3: BQSR step 1
@@ -98,7 +98,7 @@ gatk --java-options "-Xmx4G" BaseRecalibrator \
 --known-sites PATH_TO_SRZ189891_722g.simp.GSD1.0.vcf.gz \
 -O /tmp/bqsr/INTERVAL.recal_data.table
 ```
-Then when completed the recalibration data is combined
+Then when completed the recalibration data is combined:
 
 ```
 gatk --java-options "-Xmx6G" GatherBQSRReports \
@@ -158,7 +158,7 @@ gatk --java-options "-Xmx4G" HaplotypeCaller \
 -ERC GVCF 
 ```
 
-The GVCFs are combined using
+The GVCFs are combined using:
 ```
 gatk --java-options "-Xmx6G" GatherVcfs \
 -I /tmp/GVCF/INTERVAL-1.g.vcf.gz \
