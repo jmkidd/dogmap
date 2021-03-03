@@ -9,8 +9,8 @@ This approach is not meant to be definitive and is a work in progress.
 ## Associated files
 Associated files for alignment can be found at https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/
 
-total 1.7G
 ```
+total 1.7G
  87K Feb 26 14:19 canFam4.chromAlias.txt
  144 Feb 26 14:20 chrY.chromAlias.txt
 898M Mar  3 13:57 SRZ189891_722g.simp.GSD1.0.vcf.gz
@@ -37,7 +37,7 @@ Chromosome order is as indicated in the genome [.fai file](https://kiddlabshare.
 
 A set of known variants is required for Base Quality Score Recalibration (BQSR). Mismatches
 at the known variant positions are ignored when building the quality recalibration model. For BQSR we utilized
-the variant file of 91 million SNV and small indels derived from 772 canines reported in [Plassais et al.](https://www.nature.com/articles/s41467-019-09373-w).
+the variant file of 91 million SNV and small indels derived from 772 canines reported in [Plassais et al.](https://www.nature.com/articles/s41467-019-09373-w)
 
 The variant file was converted to UU_Cfam_GSD_1.0 coordinates using the LiftoverVcf from Picard/GATK, resulting in
 a total of 71,541,892 SNVs and 16,939,218 indels found in [SRZ189891_722g.simp.GSD1.0.vcf.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/SRZ189891_722g.simp.GSD1.0.vcf.gz).
@@ -69,7 +69,7 @@ fq1.gz fq2.gz | samtools view -bS - >  /tmp/SAMPLE.bam
 ```
 
 This command is inspired by [Reiger et al. Functional equivalence of genome sequencing analysis](https://www.nature.com/articles/s41467-018-06159-4) and by 
-discussions with colleagues. The -K option removes non-determinism in framgent length distributions identified using different numbers of threads. -Y uses
+discussions with colleagues. The -K option removes non-determinism in the fragment length distributions identified using different numbers of threads. -Y uses
 soft clipping for supplementary alignments, which may aid down stream structural variation analyses. 
 
 ### Step 2: marking duplicates and sorting.
@@ -82,3 +82,30 @@ gatk MarkDuplicatesSpark -I /tmp/SAMPLE.bam  -O /tmp/SAMPLE.sort.md.bam -M /fina
 --conf 'spark.executor.cores=NUM_THREADS
 --conf ''spark.local.dir=/tmp
 ```
+
+### Step 3: BQSR step 1
+
+BQSR is run in parallel using GNU parallel with 40 seperate jobs for chr1-chr38, chrX, and all other sequences together. The resulting
+recalibration data tables are then combined using GatherBQSRReports.
+
+Sample cmd:
+```
+gatk --java-options "-Xmx4G" BaseRecalibrator \
+--tmp-dir /tmp \
+-I /tmp/SAMPLE.sort.md.bam \
+-R PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa
+--intervals INTERVAL_FILE_TO_PROCES
+--known-sites PATH_TO_SRZ189891_722g.simp.GSD1.0.vcf.gz \
+-O /tmp/bqsr/INTERVAL.recal_data.table
+```
+Then when completed, the recalibration data is combined
+
+```
+gatk --java-options "-Xmx6G" GatherBQSRReports \
+--input /tmp/bqsr/INTERVAL-1.recal_data.table \
+--input /tmp/bqsr/INTERVAL-2.recal_data.table \
+--input /tmp/bqsr/INTERVAL-3.recal_data.table \
+...
+--output /tmp/bqsrgathered.reports.list
+```
+
