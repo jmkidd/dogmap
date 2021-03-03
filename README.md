@@ -72,7 +72,7 @@ This command is inspired by [Reiger et al. Functional equivalence of genome sequ
 discussions with colleagues. The -K option removes non-determinism in the fragment length distributions identified using different numbers of threads. -Y uses
 soft clipping for supplementary alignments, which may aid down stream structural variation analyses. 
 
-### Step 2: marking duplicates and sorting.
+### Step 2: marking duplicates and sorting
 
 Duplicate marking and sorting is performed in one step using MarkDuplicatesSpark.
 
@@ -108,4 +108,46 @@ gatk --java-options "-Xmx6G" GatherBQSRReports \
 ...
 --output /tmp/bqsrgathered.reports.list
 ```
+
+### Step 4: BQSR step 2
+The base calibration is then performed with ApplyBQSR based on the combined reports. This is done in parallel with
+41 separate jobs for chr1-chr38, chrX, all other sequences together, and unmapped reads.
+The recalibrated qualities scores are discretized into 4 bins with low quality values unchanged.
+
+Sample cmd:
+```
+gatk --java-options "-Xmx4G" ApplyBQSR \
+--tmp-dir /tmp
+-I /tmp/SAMPLE.sort.md.bam \
+-R PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa \
+-O /tmp/bqsr/INTERVAL.bqsr.bam \
+--intervals /tmp/bqsrgathered.reports.list \
+--preserve-qscores-less-than 6 \
+--static-quantized-quals 10 \
+--static-quantized-quals 20 \
+--static-quantized-quals 30 \
+--static-quantized-quals 40 
+```
+The 41 recalibrated BAMs are then combined using GatherBamFiles
+
+```
+gatk --java-options "-Xmx6G" GatherBamFiles \
+--CREATE_INDEX true \
+-I /tmp/bqsr/INTERVAL-1.bqsr.bam \
+-I /tmp/bqsr/INTERVAL-2.bqsr.bam \
+-I /tmp/bqsr/INTERVAL-3.bqsr.bam \
+...
+-O /tmp/SAMPLE.recal.bam
+```
+
+
+
+
+
+
+
+
+
+
+
 
