@@ -93,8 +93,8 @@ Sample cmd:
 gatk --java-options "-Xmx4G" BaseRecalibrator \
 --tmp-dir /tmp \
 -I /tmp/SAMPLE.sort.md.bam \
--R PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa
---intervals INTERVAL_FILE_TO_PROCES
+-R PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa \
+--intervals INTERVAL_FILE_TO_PROCESS \
 --known-sites PATH_TO_SRZ189891_722g.simp.GSD1.0.vcf.gz \
 -O /tmp/bqsr/INTERVAL.recal_data.table
 ```
@@ -117,11 +117,12 @@ The recalibrated qualities scores are discretized into 4 bins with low quality v
 Sample cmd:
 ```
 gatk --java-options "-Xmx4G" ApplyBQSR \
---tmp-dir /tmp
+--tmp-dir /tmp \
 -I /tmp/SAMPLE.sort.md.bam \
 -R PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa \
 -O /tmp/bqsr/INTERVAL.bqsr.bam \
---intervals /tmp/bqsrgathered.reports.list \
+--intervals INTERVAL_FILE_TO_PROCESS \
+--bqsr-recal-file /tmp/bqsrgathered.reports.list \
 --preserve-qscores-less-than 6 \
 --static-quantized-quals 10 \
 --static-quantized-quals 20 \
@@ -139,8 +140,74 @@ gatk --java-options "-Xmx6G" GatherBamFiles \
 ...
 -O /tmp/SAMPLE.recal.bam
 ```
+### Step 5: Create GVCF file
+
+HaplotypeCaller is then run to create a per-sample GVCF file for subsequent cohort
+short variant identification.  This is run in parallel across 39 separate jobs 
+for chr1-chr38, chrX, and all other sequences together.  The resulting GVCF files
+are then combined using GatherVcfs.
+
+Sample cmd:
+```
+gatk --java-options "-Xmx4G" HaplotypeCaller \
+--tmp-dir /tmp \
+-R PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa \
+-I /tmp/SAMPLE.recal.bam \
+--intervals INTERVAL_FILE_TO_PROCESS \
+-O /tmp/GVCF/INTERVAL.g.vcf.gz \
+-ERC GVCF 
+```
+
+The GVCFs are combined using
+```
+gatk --java-options "-Xmx6G" GatherVcfs \
+-I /tmp/GVCF/INTERVAL-1.g.vcf.gz \
+-I /tmp/GVCF/INTERVAL-2.g.vcf.gz \
+-I /tmp/GVCF/INTERVAL-3.g.vcf.gz \
+...
+-O /tmp/SAMPLE.g.vcf.gz
+ ```
+The final GCF is then copied to a permanent storage location. 
 
 
+### Step 6: Convert recalibrated BAM to CRAM
+
+A cram file is created and copied to a permanent storage location
+
+```
+gatk --java-options "-Xmx6G" PrintReads \
+-R PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa \
+-I /tmp/SAMPLE.recal.bam \
+-O /permanent/storage/dir/SAMPLE.cram
+```
+
+## Use of pipeline script
+
+On our cluster, this can be ran automatically as a job with multiple available processing 
+cores on a single computer node. Local fast storage on the node is utilized.
+
+Sample cmd:
+```
+python dogmap/process-illumina.py \
+-t 24 \
+--sn CH027 \
+--lib CH027lib1 \
+--fq1 dl/ERR2750983_1.fastq.gz \
+--fq2 dl/ERR2750983_2.fastq.gz \
+--ref UU_Cfam_GSD_1.0_ROSY.fa \
+--refBWA bwa-mem2index/UU_Cfam_GSD_1.0_ROSY.fa \
+--tmpdir /tmpssd/CH027tmp \
+--finaldir genome-processing/aligned \
+--knownsites vcf/SRZ189891_722g.simp.GSD1.0.vcf.gz
+```
+
+## Known issues and next steps
+
+* Automate QC stats on final cram
+* Calculate read depth at known variant sites and estimate X vs autosomes coverage
+* Calculate IBS metric from collection of known samples, estimate sample sample identity
+* Define known sites for use in sample variant calling (VQSR)
+* Define known copy-number 2 regions for normalization in QuicK-mer2 and fastCN depth-of-coverage based pipeline
 
 
 
