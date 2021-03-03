@@ -64,7 +64,6 @@ def runCMD_output(cmd):
        resLines.append(i)
     return resLines
 #############################################################################        
-#############################################################################        
 # Helper function to read in information from genome .fai file and return
 # a dictionary containing chrom names and lengths
 def read_chrom_len(faiFileName):
@@ -78,8 +77,7 @@ def read_chrom_len(faiFileName):
     return chromLens    
 ############################################################################# 
 # setup paths to default programs to use and checks for required programs
-def check_prog_paths(myData):    
-    
+def check_prog_paths(myData):        
     myData['logFile'].write('\nChecking for required programs...\n')
     
     for p in ['bwa-mem2','gatk','samtools','parallel']:
@@ -97,8 +95,6 @@ def check_prog_paths(myData):
 def init_log(myData):
     k = list(myData.keys())
     k.sort()
-    
-
     myData['startTime'] = time.localtime()
     myData['tStart'] = time.time()
     t = time.strftime("%a, %d %b %Y %H:%M:%S", myData['startTime'])        
@@ -106,13 +102,13 @@ def init_log(myData):
     
     hn = socket.gethostname()
     myData['logFile'].write('Host name: %s\n' % hn)
+    print('Host name: %s\n' % hn,flush=True)
+    
     myData['logFile'].write('\nInput options:\n')
     for i in k:
         if i in ['logFile']:
             continue        
-        myData['logFile'].write('%s\t%s\n' % (i,myData[i]))
-        
-        
+        myData['logFile'].write('%s\t%s\n' % (i,myData[i]))                
     myData['logFile'].flush()  
 ############################################################################# 
 def check_dir_space(myData):
@@ -123,20 +119,19 @@ def check_dir_space(myData):
         s = myData['tmpDir'] + ' is not found! making it'        
         print(s,flush=True)
         myData['logFile'].write(s + '\n')
-        myData['logFile'].close()        
+        myData['logFile'].flush()        
         
         cmd = 'mkdir -p %s ' % myData['tmpDir']
         print(cmd,flush=True)
         myData['logFile'].write(cmd + '\n')
-        myData['logFile'].close()  
-        runCMD(cmd)      
-        
+        myData['logFile'].flush()  
+        runCMD(cmd)              
 
     if os.path.isdir(myData['finalDir']) is False:
         s = myData['finalDir'] + ' is not found! please check'
         print(s,flush=True)
         myData['logFile'].write(s + '\n')
-        myData['logFile'].close()        
+        myData['logFile'].flush()        
         sys.exit()
         
     cmd = 'df -h %s' % myData['tmpDir']
@@ -736,11 +731,11 @@ myData['logFileName'] = myData['finalDir'] + myData['sampleName'] + '.map.log'
 # if log file exists, then there is partial processing so not sure we want to redo and overwrite
 # safe to just quite and letter user deal with it
 
-#if os.path.isfile(myData['logFileName']) is True:
-#    print('ERROR!!!')
-#    print('%s exists.  Do you really want to rerun this pipeline?' % myData['logFileName'] )
-#    print('ERROR!!!')
-#    sys.exit()
+if os.path.isfile(myData['logFileName']) is True:
+    print('ERROR!!!')
+    print('%s exists.  Do you really want to rerun this pipeline?' % myData['logFileName'] )
+    print('ERROR!!!')
+    sys.exit()
 
 myData['logFile'] = open(myData['logFileName'],'w')
 
