@@ -101,8 +101,7 @@ def init_log(myData):
 
     myData['startTime'] = time.localtime()
     myData['tStart'] = time.time()
-    t = time.strftime("%a, %d %b %Y %H:%M:%S", myData['startTime'])
-        
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", myData['startTime'])        
     myData['logFile'].write(t + '\n')
     
     hn = socket.gethostname()
@@ -121,11 +120,17 @@ def check_dir_space(myData):
     
     # check tmp dir
     if os.path.isdir(myData['tmpDir']) is False:
-        s = myData['tmpDir'] + ' is not found! please check'
+        s = myData['tmpDir'] + ' is not found! making it'        
         print(s,flush=True)
         myData['logFile'].write(s + '\n')
         myData['logFile'].close()        
-        sys.exit()
+        
+        cmd = 'mkdir -p %s ' % myData['tmpDir']
+        print(cmd,flush=True)
+        myData['logFile'].write(cmd + '\n')
+        myData['logFile'].close()  
+        runCMD(cmd)      
+        
 
     if os.path.isdir(myData['finalDir']) is False:
         s = myData['finalDir'] + ' is not found! please check'
@@ -155,6 +160,10 @@ def run_bwa_mem2(myData,run=True):
     s = 'Starting bwa mem'
     print(s,flush=True)
     myData['logFile'].write('\n' + s + '\n')
+
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')
+
     myData['logFile'].flush()              
     
     myData['workingBaseDir'] = myData['tmpDir'] + myData['sampleName']
@@ -170,7 +179,7 @@ def run_bwa_mem2(myData,run=True):
     myData['workingBaseDir'] += '/'   
     myData['bwaMEMBam'] = myData['workingBaseDir'] + myData['sampleName'] + '.bam'
     
-    cmd = 'bwa-mem2 mem -K 100000000  -t %i ' % (myData['threads'])
+    cmd = 'bwa-mem2 mem -K 100000000  -t %i -Y ' % (myData['threads'])
     rg = '\'@RG\\tID:%s\\tSM:%s\\tLB:%s\\tPL:ILLUMINA\'' % (myData['sampleName']+'_'+myData['libName'],myData['sampleName'],myData['libName'])
     cmd += ' -R %s ' % rg
     cmd += '%s %s %s' % (myData['refBWA'], myData['fq1'],myData['fq2'])
@@ -179,18 +188,23 @@ def run_bwa_mem2(myData,run=True):
     if run is True:    
         print(cmd)
         myData['logFile'].write(cmd + '\n')
+        myData['logFile'].flush()              
         runCMD(cmd)        
     else:
         s = 'skipping run_bwa_mem2'
         print(s,flush=True)
         myData['logFile'].write(s + '\n')    
-        
+    
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')        
     myData['logFile'].flush()              
 ############################################################################# 
 def run_mdspark(myData,run=True):
     s = 'Starting run_mdspark'
     print(s,flush=True)
     myData['logFile'].write('\n' + s + '\n')
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')
     myData['logFile'].flush()              
     
     myData['MDbam'] = myData['workingBaseDir'] + myData['sampleName'] + '.sort.md.bam'
@@ -203,7 +217,7 @@ def run_mdspark(myData,run=True):
     cmd += ' --conf ''spark.local.dir=%s'' ' % myData['tmpDir']
 
     if run is True:    
-        print(cmd)
+        print(cmd,flush=True)
         myData['logFile'].write(cmd + '\n')
         myData['logFile'].flush()        
         runCMD(cmd)        
@@ -211,7 +225,9 @@ def run_mdspark(myData,run=True):
         s = 'skipping run_bwa_mem2'
         print(s,flush=True)
         myData['logFile'].write(s + '\n')    
-        
+    
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')        
     myData['logFile'].flush()              
 ############################################################################# 
 def run_bqsr(myData,run=True):
@@ -219,6 +235,8 @@ def run_bqsr(myData,run=True):
     s = 'starting run_bqsr'
     print(s,flush=True)
     myData['logFile'].write('\n' + s + '\n')
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')
     myData['logFile'].flush()              
    
 
@@ -274,8 +292,15 @@ def run_bqsr(myData,run=True):
 
     if run is True:    
         print(cmd)
-        myData['logFile'].write(cmd + '\n')        
+        myData['logFile'].write(cmd + '\n') 
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+               
         runCMD(cmd)        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+
         myData['logFile'].flush()
     else:
         s = 'skipping parallel BaseRecalibrator'
@@ -299,7 +324,13 @@ def run_bqsr(myData,run=True):
     if run is True:    
         print(cmd)
         myData['logFile'].write(cmd + '\n')        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
         runCMD(cmd)        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+
         myData['logFile'].flush()
     else:
         s = 'skipping GatherBQSRReports'
@@ -313,7 +344,7 @@ def run_bqsr(myData,run=True):
     
     for intervalFileName in myData['bqsrIntervalsFiles']:
         cName = intervalFileName.split('/')[-1].split('.')[0]
-        outBAMName = myData['bqsrDataDir'] + cName + '.bqsr.cram'        
+        outBAMName = myData['bqsrDataDir'] + cName + '.bqsr.bam'        
         cmd = 'gatk --java-options "-Xmx4G" ApplyBQSR '
         cmd += ' --tmp-dir %s ' % myData['tmpDir']
         cmd += ' -I %s ' % myData['MDbam']
@@ -327,7 +358,7 @@ def run_bqsr(myData,run=True):
         outFile.write(cmd)
     
     # do unmapped
-    outBAMName = myData['bqsrDataDir'] + 'unmapped' + '.bqsr.cram'        
+    outBAMName = myData['bqsrDataDir'] + 'unmapped' + '.bqsr.bam'        
     cmd = 'gatk --java-options "-Xmx4G" ApplyBQSR '
     cmd += ' --tmp-dir %s ' % myData['tmpDir']
     cmd += ' -I %s ' % myData['MDbam']
@@ -335,7 +366,7 @@ def run_bqsr(myData,run=True):
     cmd += ' -O %s ' % outBAMName        
     cmd += ' --intervals %s ' % 'unmapped'
     cmd += ' --bqsr-recal-file %s ' % myData['bqsrReportsGatheredFile']
-    cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30  '
+    cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30 --static-quantized-quals 40 '
 
     cmd += '\n'
     outFile.write(cmd)
@@ -350,10 +381,16 @@ def run_bqsr(myData,run=True):
     
     cmd = 'parallel --jobs %i  < %s' % (myData['threads'],myData['ApplyBQSRJobsFileName'])              
 
-    if True is True:    
+    if run is True:    
         print(cmd)
         myData['logFile'].write(cmd + '\n')        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
         runCMD(cmd)        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
         myData['logFile'].flush()
     else:
         s = 'skipping parallel ApplyBQSRJobsFileName'
@@ -365,12 +402,84 @@ def run_bqsr(myData,run=True):
 
     # GatherBamFiles, need them in order to be used
     
+    s = 'starting GatherBamFiles'
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+    myData['logFile'].flush()
     
+    bamFileOrder = get_order_for_GatherBamFiles(myData)
+    myData['recalBamFile'] = myData['workingBaseDir'] + myData['sampleName'] + '.recal.bam'
     
+    cmd = 'gatk --java-options "-Xmx6G" GatherBamFiles'
+    cmd += ' --CREATE_INDEX true '
+    for i in bamFileOrder:
+        cmd += ' -I %s ' % i
+    cmd += ' -O %s ' % myData['recalBamFile']
+
+    if run is True:    
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+        runCMD(cmd)        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+        
+    else:
+        s = 'skipping gather BAM files'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')    
+        myData['logFile'].flush()
     
-    
-    
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')
+    myData['logFile'].flush()
 ############################################################################# 
+def get_order_for_GatherBamFiles(myData):
+    # this is the order to combine the cram files into
+    # note, this is hard coded for the dog genome here..., so 
+    # will have to be smart if using on human or other.
+    bamFileOrder = []
+    for i in range(1,39):
+        c = 'chr' + str(i)
+        bam  = myData['bqsrDataDir'] + c + '.bqsr.bam'   
+        bamFileOrder.append(bam)
+    c = 'chrX'
+    bam  = myData['bqsrDataDir'] + c + '.bqsr.bam'   
+    bamFileOrder.append(bam)
+
+    c = 'other'
+    bam  = myData['bqsrDataDir'] + c + '.bqsr.bam'   
+    bamFileOrder.append(bam)
+
+    c = 'unmapped'
+    bam  = myData['bqsrDataDir'] + c + '.bqsr.bam'   
+    bamFileOrder.append(bam)
+    
+    return bamFileOrder
+############################################################################# 
+def get_order_for_GatherGVCFFiles(myData):
+    # this is the order to combine the g.vcf files into
+    # note, this is hard coded for the dog genome here..., so 
+    # will have to be smart if using on human or other.
+    vcfFileOrder = []
+    for i in range(1,39):
+        c = 'chr' + str(i)
+        outVCFName = myData['gvcfDir'] + c + '.g.vcf.gz'                        
+        vcfFileOrder.append(outVCFName)
+
+    c = 'chrX'
+    outVCFName = myData['gvcfDir'] + c + '.g.vcf.gz'                        
+    vcfFileOrder.append(outVCFName)
+
+    c = 'other'
+    outVCFName = myData['gvcfDir'] + c + '.g.vcf.gz'                        
+    vcfFileOrder.append(outVCFName)
+
+    
+    return vcfFileOrder
 ############################################################################# 
 def setup_intervals(myData):
     # read in contig names
@@ -443,6 +552,139 @@ def setup_intervals(myData):
     myData['logFile'].write(s + '\n')  
     myData['logFile'].flush()  
 ############################################################################# 
+def run_haplotypecaller(myData,run=True):
+    #setup, run, and apply BQSR
+    s = 'starting run_haplotypecaller'
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')
+    myData['logFile'].flush()
+
+    # make intervals files
+    myData['gvcfDir'] = myData['workingBaseDir'] + 'gvcfDir'
+    
+    if os.path.isdir(myData['gvcfDir']) is True:
+        s = '%s exists!' % (myData['gvcfDir'])
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+    else:
+       cmd = 'mkdir %s' % myData['gvcfDir']
+       myData['logFile'].write(cmd + '\n')
+       runCMD(cmd)    
+    myData['gvcfDir'] += '/'
+    
+    myData['runHaplotypeCallerJobsFileName'] = myData['workingBaseDir'] + 'hapcaller.jobs.txt'
+    outFile = open(myData['runHaplotypeCallerJobsFileName'],'w')
+
+    for intervalFileName in myData['bqsrIntervalsFiles']:
+        cName = intervalFileName.split('/')[-1].split('.')[0]
+        outBAMName = myData['gvcfDir'] + cName + '.g.vcf.gz'        
+    
+        cmd = 'gatk --java-options "-Xmx4G" HaplotypeCaller '
+        cmd += ' --tmp-dir %s ' % myData['tmpDir']
+        cmd += ' -I %s ' % myData['recalBamFile']
+        cmd += ' -R %s' % myData['ref']
+        cmd += ' --intervals %s ' % intervalFileName
+        cmd += ' -O %s ' % outBAMName
+        cmd += ' -ERC GVCF '        
+        cmd += '\n'
+        outFile.write(cmd)
+    
+   # add write CRAM at this step, to get rid of dead CPU time... 
+    myData['finalCram'] = myData['finalDir'] + myData['sampleName'] + '.cram'
+    
+    cmd = 'gatk --java-options "-Xmx6G" PrintReads '
+    cmd += ' -R %s' % myData['ref']    
+    cmd += ' -I %s -O %s ' % (myData['recalBamFile'], myData['finalCram'])
+    cmd += '\n'
+    outFile.write(cmd)
+
+    outFile.close()
+
+    s = 'list of HaplotypeCaller written to %s' % myData['runHaplotypeCallerJobsFileName']
+    s += ' this includes write CRAM! '
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+    myData['logFile'].flush()
+    
+    cmd = 'parallel --jobs %i  < %s' % (myData['threads'],myData['runHaplotypeCallerJobsFileName'])              
+    
+    if run is True:    
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+        runCMD(cmd)        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+        myData['logFile'].flush()
+    else:
+        s = 'skipping parallel runHaplotypeCallerJobsFileName'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')    
+        myData['logFile'].flush()
+        
+        
+    # now gather gvcf files into one
+    myData['combinedGVCF'] = myData['finalDir'] + myData['sampleName'] + '.g.vcf.gz'    
+    
+    vcfFileOrder = get_order_for_GatherGVCFFiles(myData)
+    
+    cmd = 'gatk --java-options "-Xmx6G" GatherVcfs'
+    for f in vcfFileOrder:
+        cmd += ' -I %s ' % f 
+    cmd += ' -O %s ' % myData['combinedGVCF']
+    
+    if run is True:    
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+        runCMD(cmd)        
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+        myData['logFile'].flush()
+    else:
+        s = 'skipping combinedGVCF'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')    
+        myData['logFile'].flush()    
+############################################################################# 
+def remove_tmp_dir(myData,run=True):
+    #setup, run, and apply BQSR
+    s = 'starting remove tmp dir: %s ' % (myData['tmpDir'])
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')
+    myData['logFile'].flush()
+    
+    check_dir_space(myData)
+    
+    if run is True:
+        shutil.rmtree(myData['tmpDir']) 
+        s = 'removed!'
+        print(s,flush=True)
+        myData['logFile'].write('\n' + s + '\n')
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+    else:
+        s = 'skipping rmtree!'
+        print(s,flush=True)
+        myData['logFile'].write('\n' + s + '\n')
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')
+        myData['logFile'].flush()
+
+    check_dir_space(myData)
+############################################################################# 
+
 
 # SETUP
 
@@ -508,14 +750,16 @@ init_log(myData)
 # make sure programs are availble
 check_prog_paths(myData)
 check_dir_space(myData)
-run_bwa_mem2(myData,False)
-run_mdspark(myData,False)
+run_bwa_mem2(myData)
+run_mdspark(myData)
 
-run_bqsr(myData,False)
-
-
+run_bqsr(myData)
+run_haplotypecaller(myData)
 
 # clean up and get elapsed time!
+remove_tmp_dir(myData)
+
+
 myData['endTime'] = time.localtime()
 myData['tEnd'] = time.time()
 t = time.strftime("%a, %d %b %Y %H:%M:%S", myData['endTime'])
@@ -527,8 +771,6 @@ elapsedTime = myData['tEnd'] - myData['tStart'] # this is in nanoseconds??
 elapsedTime= elapsedTime / 60
 # convert to hours
 elapsedTime = elapsedTime / 60
-
-
 
 #t = time.strftime("%H:%M:%S",elapsedTime )
 myData['logFile'].write('Elapsed time:\n%s hours\n' % elapsedTime)
