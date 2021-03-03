@@ -347,7 +347,7 @@ def run_bqsr(myData,run=True):
         cmd += ' -O %s ' % outBAMName        
         cmd += ' --intervals %s ' % intervalFileName
         cmd += ' --bqsr-recal-file %s ' % myData['bqsrReportsGatheredFile']
-        cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30  '
+        cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30 --static-quantized-quals 40 '
         
         cmd += '\n'
         outFile.write(cmd)
