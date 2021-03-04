@@ -572,6 +572,18 @@ def run_haplotypecaller(myData,run=True):
     myData['runHaplotypeCallerJobsFileName'] = myData['workingBaseDir'] + 'hapcaller.jobs.txt'
     outFile = open(myData['runHaplotypeCallerJobsFileName'],'w')
 
+    # add write CRAM at this step, to get rid of dead CPU time... 
+    # change to make CRAM as first job
+    myData['finalCram'] = myData['finalDir'] + myData['sampleName'] + '.cram'
+    
+    cmd = 'gatk --java-options "-Xmx6G" PrintReads '
+    cmd += ' -R %s' % myData['ref']    
+    cmd += ' -I %s -O %s ' % (myData['recalBamFile'], myData['finalCram'])
+    cmd += '\n'
+    outFile.write(cmd)
+
+
+
     for intervalFileName in myData['bqsrIntervalsFiles']:
         cName = intervalFileName.split('/')[-1].split('.')[0]
         outBAMName = myData['gvcfDir'] + cName + '.g.vcf.gz'        
@@ -586,14 +598,6 @@ def run_haplotypecaller(myData,run=True):
         cmd += '\n'
         outFile.write(cmd)
     
-   # add write CRAM at this step, to get rid of dead CPU time... 
-    myData['finalCram'] = myData['finalDir'] + myData['sampleName'] + '.cram'
-    
-    cmd = 'gatk --java-options "-Xmx6G" PrintReads '
-    cmd += ' -R %s' % myData['ref']    
-    cmd += ' -I %s -O %s ' % (myData['recalBamFile'], myData['finalCram'])
-    cmd += '\n'
-    outFile.write(cmd)
 
     outFile.close()
 
@@ -676,8 +680,6 @@ def remove_tmp_dir(myData,run=True):
         t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
         myData['logFile'].write(t + '\n')
         myData['logFile'].flush()
-
-    check_dir_space(myData)
 ############################################################################# 
 
 
