@@ -46,6 +46,19 @@ the variant file of 91 million SNV and small indels derived from 772 canines rep
 variant file was converted to UU_Cfam_GSD_1.0 coordinates using the LiftoverVcf tool from Picard/GATK, resulting in
 a total of 71,541,892 SNVs and 16,939,218 indels found in [SRZ189891_722g.simp.GSD1.0.vcf.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/SRZ189891_722g.simp.GSD1.0.vcf.gz).
 
+VQSR, calculation of effective read depth, and calculation of IBS with existing sample databases
+require known variant sites.  A collection of these has also been determined.
+
+**SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz** This file contains a subset of sites from the Illumina
+CanineHD genotyping array.  The file CanineHD_B.csv was downloaded from the Illumina web page and CanFam3.1 positions were exctracted.
+Sites were further filtered for those positions with genotypes reported in Shannon et al.  The resultant 
+set of positions was intersected with the variants from the Plassais et al. 772 canines study.  Positions
+were then lifted over to UU_Cfam_GSD_1.0 coordinates and further filtered to remove SNVs with more than
+two alleles and to remove sites placed on chromosomes other than chr1-chr38 and chrX.  The resultant file 
+contains
+
+
+
 ## Software versions
 
 The following software and versions are used
@@ -65,7 +78,7 @@ All paths are given as examples and should be modified for your own use.
 
 **Note: This implementation is designed for use with fast storage.**  If you are running
 on a cluster with slower storage, then steps like MarkDuplicatesSpark will be very slow.
-Traditional 
+Traditional markduplicates and sorting may work better.
 
 ### Step 1: read alignment using bwa-mem2
 
