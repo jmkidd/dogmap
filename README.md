@@ -15,6 +15,12 @@ total 1.7G
  144 Feb 26 14:20 chrY.chromAlias.txt
 898M Mar  3 13:57 SRZ189891_722g.simp.GSD1.0.vcf.gz
 1.6M Mar  3 14:01 SRZ189891_722g.simp.GSD1.0.vcf.gz.tbi
+ 11M Mar  5 16:00 SRZ189891_722g.simp.header.Axiom_K9_HD.names.GSD_1.0.filter.vcf.gz
+1.2M Mar  5 16:00 SRZ189891_722g.simp.header.Axiom_K9_HD.names.GSD_1.0.filter.vcf.gz.tbi
+ 11M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf.gz
+1.2M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf.gz.tbi
+2.5M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz
+798K Mar  5 16:00 SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz.tbi
 343K Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.dict
 104K Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.fa.fai
 750M Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.fa.gz
@@ -56,6 +62,10 @@ Pipeline steps are implemented in process-illumina.py.  This script is designed 
 [cluster environment](https://arc-ts.umich.edu/greatlakes/configuration/) which features compute cores with local solid state drives.
 
 All paths are given as examples and should be modified for your own use.
+
+**Note: This implementation is designed for use with fast storage.**  If you are running
+on a cluster with slower storage, then steps like MarkDuplicatesSpark will be very slow.
+Traditional 
 
 ### Step 1: read alignment using bwa-mem2
 
