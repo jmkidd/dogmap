@@ -71,7 +71,7 @@ Positions  placed on chromosomes other than chr1-chr38 and chrX were removed.  T
 **SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf**  This file is the union of the sites
 on the Illumina CanineHD and the Axiom K9 HD array as described above.  It contains 684,503 sites.
 
-###Recommendations for processing###
+### Recommendations for processing
 For BQSR, known positions of variation should be filtered out.  The file SRZ189891_722g.simp.GSD1.0.vcf.gz is appropriate for this.
 
 For coverage determination it is recommended to consider the effective coverage actually available for SNV
@@ -80,7 +80,7 @@ This has the added bonus of producing genotypes at the sites on the Illumina HD 
 data collections for sample/breed assignment and analysis.
 
 For VQSR, a set of postions highly likely to be truly variable is required.  For SNVs, the union set in 
-SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf is appropriate for VQSR training.  A reliable set 
+SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf may be appropriate for VQSR training.  A reliable set 
 for indels is not yet known.
 
 
