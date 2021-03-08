@@ -1,7 +1,7 @@
 # dogmap
 Kidd lab draft pipeline for dog Illumina WGS alignment
 
-**Last updated 3 March 2021**
+**Last updated 8 March 2021**
 
 This is a candidate pipeline and associated file set for consideration and discussion by the Dog 10K Project.
 This approach is not meant to be definitive and is a work in progress.
