@@ -252,9 +252,9 @@ python dogmap/process-illumina.py \
 
 ## Gathering useful QC metrics
 Useful QC metrics, including effective read depth and genotypes as sites on the Illumina HD array, 
-can be gathered using the script run-stats.py.  This will run several tools
+can be gathered using the script `run-stats.py`.  This will run several tools
 to calculate statistics and compile them in a summary file, SAMPLENAME.cram.stats.txt.  The resulting
-stats files can be merged into a single table for analysis and visualization using combine-stats.py.
+stats files can be merged into a single table for analysis and visualization using `combine-stats.py`.
 
 ## Known issues and next steps
 
