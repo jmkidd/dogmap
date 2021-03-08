@@ -47,16 +47,41 @@ variant file was converted to UU_Cfam_GSD_1.0 coordinates using the LiftoverVcf 
 a total of 71,541,892 SNVs and 16,939,218 indels found in [SRZ189891_722g.simp.GSD1.0.vcf.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/SRZ189891_722g.simp.GSD1.0.vcf.gz).
 
 VQSR, calculation of effective read depth, and calculation of IBS with existing sample databases
-require known variant sites.  A collection of these has also been determined.
+require known variant sites.  A collection of these has been created for consideration.  These files are based
+on SNVs genotypes by the Illumina and Axiom genotyping arrays. Successfully unifying data from genotyping
+arrays with genome sequence presents many challenges including strand/orientation issues, presence of multiple alleles,
+and empirical array performance.  The approach taken to deal with these issues is to intersect the variant positions
+found on the array with other data, including the variants identified from WGS in Plassais et al. (note, this
+include both PASS and filtered variants from the VQSR employed in that study).
 
 **SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz** This file contains a subset of sites from the Illumina
 CanineHD genotyping array.  The file CanineHD_B.csv was downloaded from the Illumina web page and CanFam3.1 positions were exctracted.
-Sites were further filtered for those positions with genotypes reported in Shannon et al.  The resultant 
-set of positions was intersected with the variants from the Plassais et al. 772 canines study.  Positions
+Sites were further filtered for those positions with genotypes reported in [Shannon et al.](https://www.pnas.org/content/112/44/13639)
+The resultant set of positions was intersected with the variants from the Plassais et al. 772 canines study.  Positions
 were then lifted over to UU_Cfam_GSD_1.0 coordinates and further filtered to remove SNVs with more than
 two alleles and to remove sites placed on chromosomes other than chr1-chr38 and chrX.  The resultant file 
-contains
+contains 150,299 SNV positions.
 
+**SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf**  This file contains a subset of 
+sites from the Axiom K9 HD array.  Positions were downloaded from the ThermoFisher web page (file: Axiom_K9_HD.na35.r5.a7.annot.csv),
+intersected with SNVs from Plassais et al., filtered to remove multi-allelic sites and converted to UU_Cfam_GSD_1.0 coordinates. 
+Positions  placed on chromosomes other than chr1-chr38 and chrX were removed.  The resultant file contains 
+684,414 SNV postions.
+
+**SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf**  This file is the union of the sites
+on the Illumina CanineHD and the Axiom K9 HD array as described above.  It contains 684,503 sites.
+
+###Recommendations for processing##
+For BQSR, known positions of variation should be filtered out.  The file SRZ189891_722g.simp.GSD1.0.vcf.gz is appropriate for this.
+
+For coverage determination it is recommended to consider the effective coverage actually available for SNV
+discovery and genotyping. This can be done by tabulating called coverage at the sites in SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz.
+This has the added bonus of producing genotypes at the sites on the Illumina HD array which can be compared with existing
+data collections for sample/breed assignment and analysis.
+
+For VQSR, a set of postions highly likely to be truly variable is required.  For SNVs, the union set in 
+SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf is appropriate for VQSR training.  A reliable set 
+for indels is not yet known.
 
 
 ## Software versions
@@ -67,6 +92,7 @@ bwa-mem2 version 2.1
 gatk version 4.2.0.0
 GNU parallel
 samtools version >= 1.9
+tabix version >= 1.7
 ```
 
 ## Conceptual overview of pipeline
@@ -224,10 +250,15 @@ python dogmap/process-illumina.py \
 --knownsites vcf/SRZ189891_722g.simp.GSD1.0.vcf.gz
 ```
 
+## Gathering useful QC metrics
+Useful QC metrics, including effective read depth and genotypes as sites on the Illumina HD array, 
+can be gathered using the script run-stats.py.  This will run several tools
+to calculate statistics and compile them in a summary file, SAMPLENAME.cram.stats.txt.  The resulting
+stats files can be merged into a single table for analysis and visualization using combine-stats.py.
+
 ## Known issues and next steps
 
-* Automate QC stats on final cram
-* Calculate read depth at known variant sites and estimate X vs autosome coverage
 * Calculate IBS metric from collection of known samples, estimate sample sample identity/breed assignment
-* Define known sites for use in variant calling (VQSR)
+* Define PAR regions on X chromosome
+* Identify training set for indels
 * Define known copy-number 2 regions for normalization in QuicK-mer2 and fastCN depth-of-coverage based pipelines
