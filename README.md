@@ -46,18 +46,18 @@ the variant file of 91 million SNV and small indels derived from 772 canines rep
 variant file was converted to UU_Cfam_GSD_1.0 coordinates using the LiftoverVcf tool from Picard/GATK, resulting in
 a total of 71,541,892 SNVs and 16,939,218 indels found in [SRZ189891_722g.simp.GSD1.0.vcf.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/SRZ189891_722g.simp.GSD1.0.vcf.gz).
 
-VQSR, calculation of effective read depth, and calculation of IBS with existing sample databases
-require known variant sites.  A collection of these has been created for consideration.  These files are based
-on SNVs genotypes by the Illumina and Axiom genotyping arrays. Successfully unifying data from genotyping
+VQSR, calculation of effective read depth, and calculation of IBS versus existing sample databases
+require a set known variant sites.  A collection of known variants has been created for consideration. These files are based
+on SNVs genotyped by the Illumina and Axiom genotyping arrays. Successfully unifying data from genotyping
 arrays with genome sequence presents many challenges including strand/orientation issues, presence of multiple alleles,
-and empirical array performance.  The approach taken to deal with these issues is to intersect the variant positions
+and empirical array performance. The approach taken to deal with these issues is to intersect the variant positions
 found on the array with other data, including the variants identified from WGS in Plassais et al. (note, this
 include both PASS and filtered variants from the VQSR employed in that study).
 
 **SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz** This file contains a subset of sites from the Illumina
 CanineHD genotyping array.  The file CanineHD_B.csv was downloaded from the Illumina web page and CanFam3.1 positions were exctracted.
 Sites were further filtered for those positions with genotypes reported in [Shannon et al.](https://www.pnas.org/content/112/44/13639)
-The resultant set of positions was intersected with the variants from the Plassais et al. 772 canines study.  Positions
+The resultant set of positions was intersected with the variants from the Plassais et al. 772 canines study, without regard to PASS annotation.  Positions
 were then lifted over to UU_Cfam_GSD_1.0 coordinates and further filtered to remove SNVs with more than
 two alleles and to remove sites placed on chromosomes other than chr1-chr38 and chrX.  The resultant file 
 contains 150,299 SNV positions.
@@ -71,7 +71,7 @@ Positions  placed on chromosomes other than chr1-chr38 and chrX were removed.  T
 **SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf**  This file is the union of the sites
 on the Illumina CanineHD and the Axiom K9 HD array as described above.  It contains 684,503 sites.
 
-###Recommendations for processing##
+###Recommendations for processing###
 For BQSR, known positions of variation should be filtered out.  The file SRZ189891_722g.simp.GSD1.0.vcf.gz is appropriate for this.
 
 For coverage determination it is recommended to consider the effective coverage actually available for SNV
