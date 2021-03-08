@@ -220,7 +220,9 @@ def summarize_stats(myData):
     inFile.close()
     
     statLine = lines[7].rstrip().split()
-    
+
+
+    outFile.write('pairOrientation\t%s\n' % statLine[8])    
     outFile.write('meanInsertLen\t%s\n' % statLine[5])
     outFile.write('stdInsertLen\t%s\n' % statLine[6])
     outFile.write('medianInsertLen\t%s\n' % statLine[0])
