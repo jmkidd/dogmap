@@ -120,7 +120,7 @@ def setup_sample_table(myData):
         line = line.split()
         myData['sampleTableList'].append(line)
 
-    inFile.closse()
+    inFile.close()
     
     s = 'read in %i lines from %s' % (len(myData['sampleTableList']),myData['sampleTable'])
     print(s,flush=True)
@@ -220,7 +220,7 @@ def run_bwa_mem2(myData,run=True):
     myData['logFile'].write(t + '\n')        
     myData['logFile'].flush()              
 ############################################################################# 
-run_bwa_mem2_table(myData,run=True):
+def run_bwa_mem2_table(myData,run=True):
     
     s = 'Starting bwa mem'
     print(s,flush=True)
@@ -254,15 +254,17 @@ run_bwa_mem2_table(myData,run=True):
         myData['logFile'].flush()              
         
     # ok, now here to do the runs
+    # table is sampleName LibraryName ReadGroupID fastq1 fastq2
+    
     if len(myData['sampleTableList']) == 1: # just single file
         row = myData['sampleTableList'][0]
         cmd = 'bwa-mem2 mem -K 100000000  -t %i -Y ' % (myData['threads'])
-        rg = '\'@RG\\tID:%s\\tSM:%s\\tLB:%s\\tPL:ILLUMINA\'' % (row[1],row[0],row[2] )
+        rg = '\'@RG\\tID:%s\\tSM:%s\\tLB:%s\\tPL:ILLUMINA\'' % (row[2],row[0],row[1] )
         cmd += ' -R %s ' % rg
         cmd += '%s %s %s' % (myData['refBWA'], row[3],row[4])
         cmd += ' | samtools view -bS - >  %s ' % myData['bwaMEMBam']
         
-        print(cmd)
+        print(cmd,flush=True)
         myData['logFile'].write(cmd + '\n')
         myData['logFile'].flush()              
         runCMD(cmd)                
@@ -275,11 +277,11 @@ run_bwa_mem2_table(myData,run=True):
             row = myData['sampleTableList'][row_i]
             newBamName = myData['bwaMEMBam'] = myData['workingBaseDir'] + myData['sampleName'] + '.row.%i.bam' % (row_i)
             cmd = 'bwa-mem2 mem -K 100000000  -t %i -Y ' % (myData['threads'])
-            rg = '\'@RG\\tID:%s\\tSM:%s\\tLB:%s\\tPL:ILLUMINA\'' % (row[1],row[0],row[2] )
+            rg = '\'@RG\\tID:%s\\tSM:%s\\tLB:%s\\tPL:ILLUMINA\'' % (row[2],row[0],row[1] )
             cmd += ' -R %s ' % rg
             cmd += '%s %s %s' % (myData['refBWA'], row[3],row[4])
             cmd += ' | samtools view -bS - >  %s ' % newBamName
-            print(cmd)
+            print(cmd,flush=True)
             myData['logFile'].write(cmd + '\n')
             myData['logFile'].flush()              
             runCMD(cmd)                

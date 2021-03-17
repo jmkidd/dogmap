@@ -32,7 +32,7 @@ args = parser.parse_args()
 
 myData = {} # dictionary for keeping and passing information
 
-# table is sampleName ReadGroupID LibraryName fastq1 fastq2
+# table is sampleName LibraryName ReadGroupID fastq1 fastq2
 myData['sampleTable'] = args.table
 
 myData['tmpDir'] = args.tmpdir
@@ -49,8 +49,10 @@ if myData['finalDir'][-1] != '/':
    myData['finalDir'] += '/'
 
 
-myData['logFileName'] = myData['finalDir'] + myData['sampleName'] + '.map.log'
+myData['sampleName'] = myData['sampleTable'].split('/')[-1].split('.')[0]
 
+
+myData['logFileName'] = myData['finalDir'] + myData['sampleName'] + '.map.log'
 myData['completeToken'] = myData['finalDir'] + myData['sampleName'] + '.map.complete'
 
 # if log file exists, then there is partial processing so not sure we want to redo and overwrite
