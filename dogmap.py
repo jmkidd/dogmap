@@ -110,6 +110,35 @@ def init_log(myData):
         myData['logFile'].write('%s\t%s\n' % (i,myData[i]))                
     myData['logFile'].flush()  
 ############################################################################# 
+def setup_sample_table(myData):
+# read in sample info
+# table is sampleName ReadGroupID LibraryName fastq1 fastq2
+    myData['sampleTableList'] = []
+    inFile = open(myData['sampleTable'],'r')
+    for line in inFile:
+        line = line.rstrip()
+        line = line.split()
+        myData['sampleTableList'].append(line)
+
+    inFile.closse()
+    
+    s = 'read in %i lines from %s' % (len(myData['sampleTableList']),myData['sampleTable'])
+    print(s,flush=True)
+    myData['logFile'].write(s + '\n')
+    sampleName = {}
+    for i in myData['sampleTableList']:
+        s = '\t'.join(i) 
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+        sampleName[i[0]] = 1
+    if len(sampleName) != 1:
+        s = 'ERROR! there are multiple sample names entered!'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+        sys.exit()
+    k = list(sampleName.keys())
+    myData['sampleName'] = k[0]
+############################################################################# 
 def check_dir_space(myData):
     myData['logFile'].write('\nchecking file systems\n')
     
@@ -190,6 +219,89 @@ def run_bwa_mem2(myData,run=True):
     t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
     myData['logFile'].write(t + '\n')        
     myData['logFile'].flush()              
+############################################################################# 
+run_bwa_mem2_table(myData,run=True):
+    
+    s = 'Starting bwa mem'
+    print(s,flush=True)
+    myData['logFile'].write('\n' + s + '\n')
+
+    t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+    myData['logFile'].write(t + '\n')
+
+    myData['logFile'].flush()              
+    
+    myData['workingBaseDir'] = myData['tmpDir'] + myData['sampleName']
+    if os.path.isdir(myData['workingBaseDir']) is True:
+        s = '%s exists!' % (myData['workingBaseDir'])
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+    else:
+       cmd = 'mkdir %s' % myData['workingBaseDir']
+       myData['logFile'].write(cmd + '\n')
+       runCMD(cmd)
+    
+    myData['workingBaseDir'] += '/'   
+    # final BAM
+    myData['bwaMEMBam'] = myData['workingBaseDir'] + myData['sampleName'] + '.bam'
+    
+    if run is False:
+        s = 'skipping run_bwa_mem2'
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')    
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')        
+        myData['logFile'].flush()              
+        
+    # ok, now here to do the runs
+    if len(myData['sampleTableList']) == 1: # just single file
+        row = myData['sampleTableList'][0]
+        cmd = 'bwa-mem2 mem -K 100000000  -t %i -Y ' % (myData['threads'])
+        rg = '\'@RG\\tID:%s\\tSM:%s\\tLB:%s\\tPL:ILLUMINA\'' % (row[1],row[0],row[2] )
+        cmd += ' -R %s ' % rg
+        cmd += '%s %s %s' % (myData['refBWA'], row[3],row[4])
+        cmd += ' | samtools view -bS - >  %s ' % myData['bwaMEMBam']
+        
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')
+        myData['logFile'].flush()              
+        runCMD(cmd)                
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')        
+        myData['logFile'].flush()                      
+    else: # multiple, need to be merged    
+        tmpBamList = []
+        for row_i in range(len(myData['sampleTableList'])):
+            row = myData['sampleTableList'][row_i]
+            newBamName = myData['bwaMEMBam'] = myData['workingBaseDir'] + myData['sampleName'] + '.row.%i.bam' % (row_i)
+            cmd = 'bwa-mem2 mem -K 100000000  -t %i -Y ' % (myData['threads'])
+            rg = '\'@RG\\tID:%s\\tSM:%s\\tLB:%s\\tPL:ILLUMINA\'' % (row[1],row[0],row[2] )
+            cmd += ' -R %s ' % rg
+            cmd += '%s %s %s' % (myData['refBWA'], row[3],row[4])
+            cmd += ' | samtools view -bS - >  %s ' % newBamName
+            print(cmd)
+            myData['logFile'].write(cmd + '\n')
+            myData['logFile'].flush()              
+            runCMD(cmd)                
+            t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+            myData['logFile'].write(t + '\n')        
+            myData['logFile'].flush()                      
+            tmpBamList.append(newBamName)
+        # here, ran for each separately
+        # merge together the bams
+        cmd = 'gatk MergeSamFiles '
+        for i in tmpBamList:
+            cmd += ' -I %s ' % i
+        cmd += ' -O %s ' % myData['bwaMEMBam']
+        cmd += ' --ASSUME_SORTED true '
+        cmd += ' --SORT_ORDER queryname '
+        print(cmd)
+        myData['logFile'].write(cmd + '\n')
+        myData['logFile'].flush()              
+        runCMD(cmd)                
+        t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
+        myData['logFile'].write(t + '\n')        
+        myData['logFile'].flush()                              
 ############################################################################# 
 def run_mdspark(myData,run=True):
     s = 'Starting run_mdspark'
