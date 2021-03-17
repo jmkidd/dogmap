@@ -54,6 +54,8 @@ if myData['finalDir'][-1] != '/':
 
 
 myData['logFileName'] = myData['finalDir'] + myData['sampleName'] + '.map.log'
+myData['completeToken'] = myData['finalDir'] + myData['sampleName'] + '.map.complete'
+
 
 # if log file exists, then there is partial processing so not sure we want to redo and overwrite
 # safe to just quite and letter user deal with it
@@ -81,6 +83,10 @@ dogmap.run_haplotypecaller(myData)
 # clean up and get elapsed time!
 dogmap.remove_tmp_dir(myData)
 
+cmd = 'touch %s ' % myData['completeToken']
+print(cmd,flush=True)
+myData['logFile'].write(cmd + '\n')
+dogmap.runCMD(cmd)
 
 myData['endTime'] = time.localtime()
 myData['tEnd'] = time.time()
