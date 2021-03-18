@@ -291,13 +291,43 @@ def run_bwa_mem2_table(myData,run=True):
             tmpBamList.append(newBamName)
         # here, ran for each separately
         # merge together the bams
-        cmd = 'gatk MergeSamFiles '
+        # first, make the header
         for i in tmpBamList:
-            cmd += ' -I %s ' % i
-        cmd += ' -O %s ' % myData['bwaMEMBam']
-        cmd += ' --ASSUME_SORTED true '
-        cmd += ' --SORT_ORDER queryname '
-        print(cmd)
+            h = i + '.header'
+            cmd = 'samtools view -H %s > %s ' % (i,h)
+             
+            print(cmd,flush=True)
+            myData['logFile'].write(cmd + '\n')
+            myData['logFile'].flush()              
+            runCMD(cmd)
+        # make the new header
+        newHeader =  myData['workingBaseDir'] + myData['sampleName'] + '.sam'
+        # copy header 0
+        i = tmpBamList[0]
+        h = i + '.header'
+        
+        cmd = 'cp %s %s ' % (h,newHeader)
+        print(cmd,flush=True)
+        myData['logFile'].write(cmd + '\n')
+        myData['logFile'].flush()              
+        runCMD(cmd)
+        
+        # copy over the rest of the headers
+        for i in tmpBamList[1:]:
+            h = i + '.header'
+            cmd = 'tail -n 2 %s >> %s ' % (h,newHeader)
+            print(cmd,flush=True)
+            myData['logFile'].write(cmd + '\n')
+            myData['logFile'].flush()              
+            runCMD(cmd)
+            
+        # cat bams
+        cmd = 'samtools cat -h %s ' % newHeader
+        cmd += ' -o %s ' %   myData['bwaMEMBam']
+        for i in  tmpBamList:
+            cmd = ' %s ' % i
+                        
+        print(cmd,flush=True)
         myData['logFile'].write(cmd + '\n')
         myData['logFile'].flush()              
         runCMD(cmd)                
