@@ -325,7 +325,7 @@ def run_bwa_mem2_table(myData,run=True):
         cmd = 'samtools cat -h %s ' % newHeader
         cmd += ' -o %s ' %   myData['bwaMEMBam']
         for i in  tmpBamList:
-            cmd = ' %s ' % i
+            cmd += ' %s ' % i
                         
         print(cmd,flush=True)
         myData['logFile'].write(cmd + '\n')
@@ -488,7 +488,7 @@ def run_bqsr(myData,run=True):
         cmd += ' -O %s ' % outBAMName        
         cmd += ' --intervals %s ' % intervalFileName
         cmd += ' --bqsr-recal-file %s ' % myData['bqsrReportsGatheredFile']
-        cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30 --static-quantized-quals 40 '
+        cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30 '
         
         cmd += '\n'
         outFile.write(cmd)
@@ -502,7 +502,7 @@ def run_bqsr(myData,run=True):
     cmd += ' -O %s ' % outBAMName        
     cmd += ' --intervals %s ' % 'unmapped'
     cmd += ' --bqsr-recal-file %s ' % myData['bqsrReportsGatheredFile']
-    cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30 --static-quantized-quals 40 '
+    cmd += ' --preserve-qscores-less-than 6 --static-quantized-quals 10 --static-quantized-quals 20  --static-quantized-quals 30 '
 
     cmd += '\n'
     outFile.write(cmd)
