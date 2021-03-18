@@ -275,7 +275,7 @@ def run_bwa_mem2_table(myData,run=True):
         tmpBamList = []
         for row_i in range(len(myData['sampleTableList'])):
             row = myData['sampleTableList'][row_i]
-            newBamName = myData['bwaMEMBam'] = myData['workingBaseDir'] + myData['sampleName'] + '.row.%i.bam' % (row_i)
+            newBamName = myData['workingBaseDir'] + myData['sampleName'] + '.row.%i.bam' % (row_i)
             cmd = 'bwa-mem2 mem -K 100000000  -t %i -Y ' % (myData['threads'])
             rg = '\'@RG\\tID:%s\\tSM:%s\\tLB:%s\\tPL:ILLUMINA\'' % (row[2],row[0],row[1] )
             cmd += ' -R %s ' % rg
