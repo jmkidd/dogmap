@@ -315,7 +315,7 @@ def run_bwa_mem2_table(myData,run=True):
         # copy over the rest of the headers
         for i in tmpBamList[1:]:
             h = i + '.header'
-            cmd = 'tail -n 2 %s >> %s ' % (h,newHeader)
+            cmd = 'grep \'^@RG\' %s >> %s ' % (h,newHeader)
             print(cmd,flush=True)
             myData['logFile'].write(cmd + '\n')
             myData['logFile'].flush()              
