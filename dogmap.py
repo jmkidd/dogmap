@@ -174,6 +174,39 @@ def check_dir_space(myData):
     myData['logFile'].write(cmd + '\n')
     myData['logFile'].write(o[0] + '\n')
     myData['logFile'].write(o[1] + '\n')
+    
+    stats =  os.statvfs(myData['tmpDir'])
+    freeSpace = stats.f_frsize * stats.f_bavail 
+    freeSpaceGb = freeSpace / (1024**3)
+    if freeSpaceGb < 200.0:
+        s = 'less than 200 Gb free in tmpDir! %f\n Closing!' % freeSpaceGb
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+        myData['logFile'].flush()
+        myData['logFile'].close()
+        sys.exit()
+    else:
+        s = 'more than 200 Gb free in tmpDir! %f\n Ok!' % freeSpaceGb
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+        myData['logFile'].flush()
+        
+
+    stats =  os.statvfs(myData['finalDir'])
+    freeSpace = stats.f_frsize * stats.f_bavail 
+    freeSpaceGb = freeSpace / (1024**3)
+    if freeSpaceGb < 50.0:
+        s = 'less than 50 Gb free in final dir! %f\n Closing!' % freeSpaceGb
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+        myData['logFile'].flush()
+        myData['logFile'].close()
+        sys.exit()
+    else:
+        s = 'more than 50 Gb free in final dir! %f\n Ok!' % freeSpaceGb
+        print(s,flush=True)
+        myData['logFile'].write(s + '\n')
+        myData['logFile'].flush()        
     myData['logFile'].flush()  
 ############################################################################# 
 def run_bwa_mem2(myData,run=True):
