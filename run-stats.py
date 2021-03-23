@@ -220,14 +220,31 @@ def summarize_stats(myData):
     inFile.close()
     
     statLine = lines[7].rstrip().split()
+    
+    numPairsFirstLine= int(statLine[7])
+    totPairs = numPairsFirstLine
+    i = 8
+    while lines[i] != '\n':
+       nl = lines[i].rstrip().split()
+       totPairs += int(nl[7])
+       i += 1
+    fractionPairsAssigned = numPairsFirstLine/totPairs
+       
+    
+    
+    # check to see if
 
 
-    outFile.write('pairOrientation\t%s\n' % statLine[8])    
+    outFile.write('pairOrientation\t%s\n' % statLine[8])
+    outFile.write('fractionWithPairOrientation\t%.4f\n' % fractionPairsAssigned )    
     outFile.write('meanInsertLen\t%s\n' % statLine[5])
     outFile.write('stdInsertLen\t%s\n' % statLine[6])
     outFile.write('medianInsertLen\t%s\n' % statLine[0])
     outFile.write('madInsertLen\t%s\n' % statLine[2])
-    outFile.close()    
+    outFile.close()  
+    
+    
+      
     print('Summary written to',myData['statsSummary'])
 ###############################################################################
 
