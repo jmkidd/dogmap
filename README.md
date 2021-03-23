@@ -1,7 +1,7 @@
 # dogmap
 Kidd lab draft pipeline for dog Illumina WGS alignment
 
-**Last updated 8 March 2021**
+**Last updated 23 March 2021**
 
 This is a candidate pipeline and associated file set for consideration and discussion by the Dog 10K Project.
 This approach is not meant to be definitive and is a work in progress.
@@ -10,21 +10,24 @@ This approach is not meant to be definitive and is a work in progress.
 Associated files for alignment can be found at https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/
 
 ```
-total 1.7G
- 87K Feb 26 14:19 canFam4.chromAlias.txt
- 144 Feb 26 14:20 chrY.chromAlias.txt
-898M Mar  3 13:57 SRZ189891_722g.simp.GSD1.0.vcf.gz
-1.6M Mar  3 14:01 SRZ189891_722g.simp.GSD1.0.vcf.gz.tbi
- 11M Mar  5 16:00 SRZ189891_722g.simp.header.Axiom_K9_HD.names.GSD_1.0.filter.vcf.gz
-1.2M Mar  5 16:00 SRZ189891_722g.simp.header.Axiom_K9_HD.names.GSD_1.0.filter.vcf.gz.tbi
- 11M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf.gz
-1.2M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf.gz.tbi
-2.5M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz
-798K Mar  5 16:00 SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz.tbi
-343K Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.dict
-104K Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.fa.fai
-750M Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.fa.gz
+total 2.4G
+  87K Feb 26 14:19 canFam4.chromAlias.txt
+  144 Feb 26 14:20 chrY.chromAlias.txt
+ 898M Mar  3 13:57 SRZ189891_722g.simp.GSD1.0.vcf.gz
+ 1.6M Mar  3 14:01 SRZ189891_722g.simp.GSD1.0.vcf.gz.tbi
+  11M Mar  5 16:00 SRZ189891_722g.simp.header.Axiom_K9_HD.names.GSD_1.0.filter.vcf.gz
+ 1.2M Mar  5 16:00 SRZ189891_722g.simp.header.Axiom_K9_HD.names.GSD_1.0.filter.vcf.gz.tbi
+  11M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf.gz
+ 1.2M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf.gz.tbi
+ 2.5M Mar  5 16:00 SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz
+ 798K Mar  5 16:00 SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz.tbi
+ 680M Mar 23 09:56 UU_Cfam_GSD_1.0.BQSR.DB.bed.gz
+ 2.0M Mar 23 09:55 UU_Cfam_GSD_1.0.BQSR.DB.bed.gz.tbi
+ 343K Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.dict
+ 104K Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.fa.fai
+ 750M Feb 26 14:20 UU_Cfam_GSD_1.0_ROSY.fa.gz
 ```
+
 
 The genome reference is based on the German Shepherd assembly from [Wang et. al.](https://www.nature.com/articles/s42003-021-01698-x)
 supplemented with Y chromosome sequence from a Labrador retriever [GCF_014441545.1](https://www.ncbi.nlm.nih.gov/assembly/GCF_014441545.1)
@@ -41,8 +44,13 @@ chrY_unplaced_NW_024010444.1 NW_024010444.1
 Chromosome order is as indicated in the genome [.fai file](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/UU_Cfam_GSD_1.0_ROSY.fa.fai)
 
 A set of known variants is required for Base Quality Score Recalibration (BQSR). Mismatches
-at the known variant positions are ignored when building the recalibration model. We utilized
-the variant file of 91 million SNV and small indels derived from 772 canines reported in [Plassais et al.](https://www.nature.com/articles/s41467-019-09373-w) The 
+at the known variant positions are ignored when building the recalibration model. We utilize a 
+set of SNP and indel positions provided by Reuben Buckley in the Ostander lab. This file is derived
+from a set of canine variants that have been hard-filtered using the GATK best practices guidlines.
+The variant positions have been liftedOver to UU_Cfam_GSD_1.0 coordinates and are provided in [UU_Cfam_GSD_1.0.BQSR.DB.bed.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/UU_Cfam_GSD_1.0.BQSR.DB.bed.gz)
+This file contains a total of 58,325,305 unique SNV and 7,251,525 unique indel positions. Note that there is some redundancy in the file.
+
+We also converted the variant file of 91 million SNV and small indels derived from 772 canines reported in [Plassais et al.](https://www.nature.com/articles/s41467-019-09373-w) The 
 variant file was converted to UU_Cfam_GSD_1.0 coordinates using the LiftoverVcf tool from Picard/GATK, resulting in
 a total of 71,541,892 SNVs and 16,939,218 indels found in [SRZ189891_722g.simp.GSD1.0.vcf.gz](https://kiddlabshare.med.umich.edu/public-data/UU_Cfam_GSD_1.0-Y/SRZ189891_722g.simp.GSD1.0.vcf.gz).
 
@@ -51,7 +59,7 @@ require a set known variant sites.  A collection of known variants has been crea
 on SNVs genotyped by the Illumina and Axiom genotyping arrays. Successfully unifying data from genotyping
 arrays with genome sequence presents many challenges including strand/orientation issues, presence of multiple alleles,
 and empirical array performance. The approach taken to deal with these issues is to intersect the variant positions
-found on the array with other data, including the variants identified from WGS in Plassais et al. (note, this
+found on the array with other data, including the variants identified from WGS in [Plassais et al.](https://www.nature.com/articles/s41467-019-09373-w) (note, this
 include both PASS and filtered variants from the VQSR employed in that study).
 
 **SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz** This file contains a subset of sites from the Illumina
@@ -62,7 +70,7 @@ were then lifted over to UU_Cfam_GSD_1.0 coordinates and further filtered to rem
 two alleles and to remove sites placed on chromosomes other than chr1-chr38 and chrX.  The resultant file 
 contains 150,299 SNV positions.
 
-**SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf**  This file contains a subset of 
+**SRZ189891_722g.simp.header.Axiom_K9_HD.names.GSD_1.0.filter.vcf.gz**  This file contains a subset of 
 sites from the Axiom K9 HD array.  Positions were downloaded from the ThermoFisher web page (file: Axiom_K9_HD.na35.r5.a7.annot.csv),
 intersected with SNVs from Plassais et al., filtered to remove multi-allelic sites and converted to UU_Cfam_GSD_1.0 coordinates. 
 Positions  placed on chromosomes other than chr1-chr38 and chrX were removed.  The resultant file contains 
@@ -72,17 +80,16 @@ Positions  placed on chromosomes other than chr1-chr38 and chrX were removed.  T
 on the Illumina CanineHD and the Axiom K9 HD array as described above.  It contains 684,503 sites.
 
 ### Recommendations for processing
-For BQSR, known positions of variation should be filtered out.  The file SRZ189891_722g.simp.GSD1.0.vcf.gz is appropriate for this.
+For BQSR, known positions of variation should be filtered out.  The file `UU_Cfam_GSD_1.0.BQSR.DB.bed.gz` is appropriate for this.
 
-For coverage determination it is recommended to consider the effective coverage actually available for SNV
-discovery and genotyping. This can be done by tabulating called coverage at the sites in SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz.
+For coverage determination we utilize the effective coverage actually available for SNV
+discovery and genotyping. This can be determined by tabulating called coverage at the sites in `SRZ189891_722g.simp.header.CanineHD.names.GSD_1.0.filter.vcf.gz`.
 This has the added bonus of producing genotypes at the sites on the Illumina HD array which can be compared with existing
 data collections for sample/breed assignment and analysis.
 
-For VQSR, a set of postions highly likely to be truly variable is required.  For SNVs, the union set in 
-SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf may be appropriate for VQSR training.  A reliable set 
+For VQSR, a set of postions highly likely to be truly variable is required. For SNVs, the union set in 
+`SRZ189891_722g.simp.header.CanineHDandAxiom_K9_HD.GSD_1.0.vcf.gz` may be appropriate for VQSR training.  A reliable set 
 for indels is not yet known.
-
 
 ## Software versions
 
@@ -92,18 +99,18 @@ bwa-mem2 version 2.1
 gatk version 4.2.0.0
 GNU parallel
 samtools version >= 1.9
-tabix version >= 1.7
+tabix and bgzip from htslib version >= 1.9
 ```
 
 ## Conceptual overview of pipeline
 
-Pipeline steps are implemented in process-illumina.py.  This script is designed to run on our
+Pipeline steps are implemented in process-illumina.py and process-illumina-file.py.  This script is designed to run on our
 [cluster environment](https://arc-ts.umich.edu/greatlakes/configuration/) which features compute cores with local solid state drives.
 
 All paths are given as examples and should be modified for your own use.
 
 **Note: This implementation is designed for use with fast storage.**  If you are running
-on a cluster with slower storage, then steps like MarkDuplicatesSpark will be very slow.
+on a cluster with slower storage, such as network mounted file systems, then steps like MarkDuplicatesSpark will be very slow.
 Traditional markduplicates and sorting may work better.
 
 ### Step 1: read alignment using bwa-mem2
@@ -144,7 +151,7 @@ gatk --java-options "-Xmx4G" BaseRecalibrator \
 -I /tmp/SAMPLE.sort.md.bam \
 -R PATH_TO_UU_Cfam_GSD_1.0_ROSY.fa \
 --intervals INTERVAL_FILE_TO_PROCESS \
---known-sites PATH_TO_SRZ189891_722g.simp.GSD1.0.vcf.gz \
+--known-sites PATH_TO_UU_Cfam_GSD_1.0.BQSR.DB.bed.gz \
 -O /tmp/bqsr/INTERVAL.recal_data.table
 ```
 Then when completed the recalibration data is combined:
@@ -161,7 +168,7 @@ gatk --java-options "-Xmx6G" GatherBQSRReports \
 ### Step 4: BQSR step 2
 The base calibration is then performed with ApplyBQSR based on the combined reports. This is done in parallel with
 41 separate jobs for chr1-chr38, chrX, all other sequences together, and unmapped reads.
-The recalibrated qualities scores are discretized into 4 bins with low quality values unchanged.
+The recalibrated qualities scores are discretized into 3 bins with low quality values unchanged.
 
 Sample cmd:
 ```
@@ -175,8 +182,7 @@ gatk --java-options "-Xmx4G" ApplyBQSR \
 --preserve-qscores-less-than 6 \
 --static-quantized-quals 10 \
 --static-quantized-quals 20 \
---static-quantized-quals 30 \
---static-quantized-quals 40 
+--static-quantized-quals 30
 ```
 The 41 recalibrated BAMs are then combined using GatherBamFiles
 
@@ -247,8 +253,51 @@ python dogmap/process-illumina.py \
 --refBWA bwa-mem2index/UU_Cfam_GSD_1.0_ROSY.fa \
 --tmpdir /tmpssd/CH027tmp \
 --finaldir genome-processing/aligned \
---knownsites vcf/SRZ189891_722g.simp.GSD1.0.vcf.gz
+--knownsites UU_Cfam_GSD_1.0.BQSR.DB.bed.gz
 ```
+
+The above has been superseded by process-illumina-file.py which reads in fastq and run information
+from a file.  This version can handle multiple fastq/runs/libraries for a single sample.  Following
+bwa-mem2 alignment BAMs are merged prior duplicate marking and sorting. 
+
+A sample cmd and input file are shown:
+
+```
+python dogmap/process-illumina-file.py \
+-t 24 \
+--table VILLPT49.runs.table.txt
+--ref UU_Cfam_GSD_1.0_ROSY.fa \
+--refBWA bwa-mem2index/UU_Cfam_GSD_1.0_ROSY.fa \
+--tmpdir /tmpssd/CH027tmp \
+--finaldir genome-processing/aligned \
+--knownsites UU_Cfam_GSD_1.0.BQSR.DB.bed.gz
+```
+
+Where `VILLPT49.runs.table.txt` gives the information for the runs to be processed for the sample. 
+The format is
+```
+sampleName  libraryName readGroupID fastq1  fastq2
+```
+an example is:
+```
+cat VILLPT49.runs.table.txt
+VILLPT49	VILLPT49_lib	SRR3384031	dl/vd/SRR3384031_1.fastq.gz	dl/vd/SRR3384031_2.fastq.gz
+VILLPT49	VILLPT49_lib	SRR3384032	dl/vd/SRR3384032_1.fastq.gz	dl/vd/SRR3384032_2.fastq.gz
+```
+
+## Reducing GVCF file size
+The default options for generating GVCF.gz files in GATK are optimized for performance. The file size
+can be reduced by ~37% by recompressing the .g.vcf.gz files using bgzip with the highest compression
+setting.  This can be performed using `recompress-gvcf.py`
+
+## Pipeline completion indicators
+An empty file named SAMPLENAME.map.complete is created to indicate 
+completion of the alignment pipeline.
+
+An empty file named SAMPLENAME.g.vcf.gz.recompressed is created to indicate 
+completion of the GVCF recompression.
+
+These indicator files may aid management of sample processing on your cluster.
 
 ## Gathering useful QC metrics
 Useful QC metrics, including effective read depth and genotypes as sites on the Illumina HD array, 
@@ -256,9 +305,25 @@ can be gathered using the script `run-stats.py`.  This will run several tools
 to calculate statistics and compile them in a summary file, SAMPLENAME.cram.stats.txt.  The resulting
 stats files can be merged into a single table for analysis and visualization using `combine-stats.py`.
 
-## Known issues and next steps
 
+## Known issues and next steps
 * Calculate IBS metric from collection of known samples, estimate sample sample identity/breed assignment
-* Define PAR regions on X chromosome
+* Define PAR regions on X chromosome and genotype males properly
 * Identify training set for indels
 * Define known copy-number 2 regions for normalization in QuicK-mer2 and fastCN depth-of-coverage based pipelines
+
+
+## Changes
+**23 March 2021** Proposed frozen version for use
+This is a proposed frozen version for consideration as part of Dog10K comparison.  There are
+several changes:
+
+- Python code refactored
+- New driver script process-illumina-file.py handles samples with multiple lanes/libraries.  BAMs are merged using samtools cat with proper header edits
+- Recommend using UU_Cfam_GSD_1.0.BQSR.DB.bed.gz for BQSR calibration
+- Reduce number of qual score bins kept, in line with https://github.com/CCDG/Pipeline-Standardization/blob/master/PipelineStandard.md.  This results in ~25 reduction in final CRAM file size
+- Implement recompression of GVCF files.  This results in ~37% reduction in final g.VCF.gz file size.
+- Update run-stats.py to record when there are multiple orientations reported in CollectInsertSizeMetrics.  Reports fracton of read-pairs with the first orientation 
+- Switch to bwa-mem2 version 2.1
+
+**8 March 2021** Initial version for testing
