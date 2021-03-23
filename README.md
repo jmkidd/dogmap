@@ -321,7 +321,7 @@ several changes:
 - Python code refactored
 - New driver script process-illumina-file.py handles samples with multiple lanes/libraries.  BAMs are merged using samtools cat with proper header edits
 - Recommend using UU_Cfam_GSD_1.0.BQSR.DB.bed.gz for BQSR calibration
-- Reduce number of qual score bins kept, in line with https://github.com/CCDG/Pipeline-Standardization/blob/master/PipelineStandard.md.  This results in ~25 reduction in final CRAM file size
+- Reduce number of qual score bins kept, in line with https://github.com/CCDG/Pipeline-Standardization/blob/master/PipelineStandard.md.  This results in ~25% reduction in final CRAM file size
 - Implement recompression of GVCF files.  This results in ~37% reduction in final g.VCF.gz file size.
 - Update run-stats.py to record when there are multiple orientations reported in CollectInsertSizeMetrics.  Reports fracton of read-pairs with the first orientation 
 - Switch to bwa-mem2 version 2.1
