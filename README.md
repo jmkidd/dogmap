@@ -314,6 +314,8 @@ stats files can be merged into a single table for analysis and visualization usi
 
 
 ## Changes
+**17 May 2021** Bug fix in X vs Autosome depth stats report
+
 **23 March 2021** Proposed frozen version for use
 This is a proposed frozen version for consideration as part of Dog10K comparison.  There are
 several changes:

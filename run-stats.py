@@ -181,8 +181,8 @@ def summarize_stats(myData):
     outFile.write('effectiveAutoMean\t%s\neffectiveAutoMedian\t%s\n' % (autoLine[2],autoLine[4]) )
     outFile.write('effectiveXMean\t%s\neffectiveXMedian\t%s\n' % (xLine[2],xLine[4]) )
     
-    xvsAutoMean =  float(autoLine[2])/ float(xLine[2])
-    xvsAutoMedian = float(autoLine[4])/ float(xLine[4])
+    xvsAutoMean =  float(xLine[2]) / float(autoLine[2])
+    xvsAutoMedian = float(xLine[4]) / float(autoLine[4])
     
     outFile.write('Mean(X/Auto)\t%.2f\n' % xvsAutoMean)
     outFile.write('Median(X/Auto)\t%.2f\n' % xvsAutoMedian)
