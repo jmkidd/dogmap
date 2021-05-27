@@ -314,6 +314,9 @@ stats files can be merged into a single table for analysis and visualization usi
 
 
 ## Changes
+**27 May 2021** Bug fix, script exited before making complete token (.map.complete) if the tmpDir 
+location had less than 200 Gb free after the run.
+
 **17 May 2021** Bug fix in X vs Autosome depth stats report
 
 **23 March 2021** Proposed frozen version for use
