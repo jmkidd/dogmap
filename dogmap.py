@@ -293,7 +293,8 @@ def run_bwa_mem2_table(myData,run=True):
         myData['logFile'].write(s + '\n')    
         t = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())        
         myData['logFile'].write(t + '\n')        
-        myData['logFile'].flush()              
+        myData['logFile'].flush()
+        return              
         
     # ok, now here to do the runs
     # table is sampleName LibraryName ReadGroupID fastq1 fastq2
@@ -400,7 +401,7 @@ def run_mdspark(myData,run=True):
         myData['logFile'].flush()        
         runCMD(cmd)        
     else:
-        s = 'skipping run_bwa_mem2'
+        s = 'skipping run_mdspark'
         print(s,flush=True)
         myData['logFile'].write(s + '\n')    
     
