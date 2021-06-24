@@ -33,67 +33,70 @@ def check_prog_paths(myData):
 
 ###############################################################################
 
-# SETUP
-
-parser = argparse.ArgumentParser(description='recompress gvcf, leaves indicator file when done')
-
-parser.add_argument('--gvcf', type=str,help='sample gvcf file',required=True)
-
-args = parser.parse_args()
-
-#####################################################################
-
-myData = {} # dictionary for keeping and passing information
-myData['gvcf'] = args.gvcf
-myData['gvcfCompleteToken'] = myData['gvcf'] + '.recompressed'
-
-if os.path.isfile(myData['gvcfCompleteToken']) is True:
-    print('token exists, exiting\n%s\n' % myData['gvcfCompleteToken'] )
-    sys.exit()
-
-# make sure programs are availble
-check_prog_paths(myData)
-
-# original size
-print('\nStarting\n')
-myData['origSize'] = os.path.getsize(myData['gvcf'])
-myData['origSize'] = myData['origSize'] / (1024**3) # to GB
-
-print('File name: %s' % myData['gvcf'])
-print('Original size (Gb): %.3f' % (myData['origSize']))
 
 
 
+def run_recompress_gvcf(myData):        
+    myData['gvcfCompleteToken'] = myData['gvcf'] + '.recompressed'
 
-# compress
-tmpNewGvcf = myData['gvcf'] + '.tmp.gz'
+    if os.path.isfile(myData['gvcfCompleteToken']) is True:
+        print('token exists, exiting\n%s\n' % myData['gvcfCompleteToken'] )
+        sys.exit()
 
-cmd = 'zcat %s | bgzip -@ 6 -l 9  -c > %s' % (myData['gvcf'],tmpNewGvcf)
-print(cmd,flush=True)
-runCMD(cmd)
+    # make sure programs are available
+    check_prog_paths(myData)
 
-# rename
-cmd = 'mv %s %s ' % (tmpNewGvcf,myData['gvcf'])
-print(cmd,flush=True)
-runCMD(cmd)
+    # original size
+    print('\nStarting\n')
+    myData['origSize'] = os.path.getsize(myData['gvcf'])
+    myData['origSize'] = myData['origSize'] / (1024**3) # to GB
 
-# index
-cmd = 'tabix -p vcf -f %s ' % myData['gvcf']
-print(cmd,flush=True)
-runCMD(cmd)
+    print('File name: %s' % myData['gvcf'])
+    print('Original size (Gb): %.3f' % (myData['origSize']))
 
-# get new size
-myData['newSize'] = os.path.getsize(myData['gvcf'])
-myData['newSize'] = myData['newSize'] / (1024**3) # to GB
+    # compress
+    tmpNewGvcf = myData['gvcf'] + '.tmp.gz'
 
-print('File name: %s' % myData['gvcf'])
-print('New size (Gb): %.3f' % (myData['newSize']))
+    cmd = 'zcat %s | bgzip -@ 6 -l 9  -c > %s' % (myData['gvcf'],tmpNewGvcf)
+    print(cmd,flush=True)
+    runCMD(cmd)
 
-f = myData['newSize'] / myData['origSize']
-print('New is %.2f %% of the original ' % (f * 100.0) )
+    # rename
+    cmd = 'mv %s %s ' % (tmpNewGvcf,myData['gvcf'])
+    print(cmd,flush=True)
+    runCMD(cmd)
 
-cmd = 'touch %s' % myData['gvcfCompleteToken']
-print(cmd,flush=True)
-runCMD(cmd)
+    # index
+    cmd = 'tabix -p vcf -f %s ' % myData['gvcf']
+    print(cmd,flush=True)
+    runCMD(cmd)
 
-print('\nComplete!\n',flush=True)
+    # get new size
+    myData['newSize'] = os.path.getsize(myData['gvcf'])
+    myData['newSize'] = myData['newSize'] / (1024**3) # to GB
+
+    print('File name: %s' % myData['gvcf'])
+    print('New size (Gb): %.3f' % (myData['newSize']))
+
+    f = myData['newSize'] / myData['origSize']
+    print('New is %.2f %% of the original ' % (f * 100.0) )
+
+    cmd = 'touch %s' % myData['gvcfCompleteToken']
+    print(cmd,flush=True)
+    runCMD(cmd)
+
+    print('\nComplete!\n',flush=True)
+# end run_recompress_gvcf
+
+
+if __name__ == '__main__':
+    # SETUP
+    parser = argparse.ArgumentParser(description='recompress gvcf, leaves indicator file when done')
+    parser.add_argument('--gvcf', type=str,help='sample gvcf file',required=True)
+    args = parser.parse_args()    
+    myData = {} # dictionary for keeping and passing information
+    myData['gvcf'] = args.gvcf
+    
+    run_recompress_gvcf(myData)
+
+
