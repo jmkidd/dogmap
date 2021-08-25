@@ -162,8 +162,9 @@ def summarize_stats(myData):
     sn = myData['cramFileName'].split('/')[-1].split('.')[0]
     
     outFile.write('SampleName\t%s\n' % (sn))
-    
+        
     cramFileSize = os.path.getsize(myData['cramFileName']) / (1024*1024*1024)
+
     outFile.write('CramSize\t%.2f Gb\n' % cramFileSize)
 
     cramFileSize = os.path.getsize(myData['gvcf']) / (1024*1024*1024)
@@ -182,7 +183,12 @@ def summarize_stats(myData):
     outFile.write('effectiveXMean\t%s\neffectiveXMedian\t%s\n' % (xLine[2],xLine[4]) )
     
     xvsAutoMean =  float(xLine[2]) / float(autoLine[2])
-    xvsAutoMedian = float(xLine[4]) / float(autoLine[4])
+    
+    if float(autoLine[4]) == 0.0:
+        xvsAutoMedian = 0.0
+    else:
+        xvsAutoMedian = float(xLine[4]) / float(autoLine[4])
+
     
     outFile.write('Mean(X/Auto)\t%.2f\n' % xvsAutoMean)
     outFile.write('Median(X/Auto)\t%.2f\n' % xvsAutoMedian)
